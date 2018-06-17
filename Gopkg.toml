@@ -1,0 +1,15 @@
+[[constraint]]
+  name = "github.com/fatih/color"
+  version = "1.7.0"
+
+[[constraint]]
+  name = "github.com/mattn/go-shellwords"
+  version = "1.0.3"
+
+[[constraint]]
+  name = "github.com/urfave/cli"
+  version = "1.20.0"
+
+[prune]
+  go-tests = true
+  unused-packages = true

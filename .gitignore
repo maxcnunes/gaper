@@ -1,0 +1,6 @@
+# binaries
+*.exe
+gaper
+srv
+vendor
+coverage.out
