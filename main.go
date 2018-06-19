@@ -80,11 +80,11 @@ func main() {
 		},
 		cli.StringSliceFlag{
 			Name:  "watch, w",
-			Usage: "a comma-delimited list of folders or files to watch for changes",
+			Usage: "list of folders or files to watch for changes",
 		},
 		cli.StringSliceFlag{
 			Name:  "ignore, i",
-			Usage: "a comma-delimited list of folders or files to ignore for changes",
+			Usage: "list of folders or files to ignore for changes",
 		},
 		cli.IntFlag{
 			Name:  "poll-interval, p",

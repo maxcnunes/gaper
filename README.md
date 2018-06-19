@@ -41,8 +41,8 @@ GLOBAL OPTIONS:
    --build-path value                 path to the program source code
    --build-args value                 build arguments passed to the program
    --verbose                          turns on the verbose messages from Gaper
-   --watch value, -w value            a comma-delimited list of folders or files to watch for changes
-   --ignore value, -i value           a comma-delimited list of folders or files to ignore for changes
+   --watch value, -w value            list of folders or files to watch for changes
+   --ignore value, -i value           list of folders or files to ignore for changes
    --poll-interval value, -p value    how often in milliseconds to poll watched files for changes (default: 500)
    --extensions value, -e value       a comma-delimited list of file extensions to watch for changes (default: "go")
    ----no-restart-on value, -n value  don't automatically restart the executed program if it ends.

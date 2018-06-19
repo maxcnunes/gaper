@@ -40,36 +40,56 @@ var errDetectedChange = errors.New("done")
 // Watch ...
 func (w *Watcher) Watch() { // nolint: gocyclo
 	for {
-		err := filepath.Walk(w.WatchItems[0], func(path string, info os.FileInfo, err error) error {
-			if path == ".git" && info.IsDir() {
-				return filepath.SkipDir
+		for i := range w.WatchItems {
+			fileChanged, err := w.scanChange(w.WatchItems[i])
+			if err != nil {
+				w.Errors <- err
+				return
 			}
 
-			for _, x := range w.IgnoreItems {
-				if x == path {
-					return filepath.SkipDir
-				}
-			}
-
-			// ignore hidden files
-			if filepath.Base(path)[0] == '.' {
-				return nil
-			}
-		time.Sleep(time.Duration(w.PollInterval) * time.Millisecond)
-
-			ext := filepath.Ext(path)
-			if _, ok := w.AllowedExtensions[ext]; ok && info.ModTime().After(startTime) {
-				w.Events <- path
+			if fileChanged != "" {
+				w.Events <- fileChanged
 				startTime = time.Now()
-				return errDetectedChange
 			}
-
-			return nil
-		})
-
-		if err != nil && err != errDetectedChange {
-			w.Errors <- err
 		}
 
+		time.Sleep(time.Duration(w.PollInterval) * time.Millisecond)
 	}
+}
+
+func (w *Watcher) scanChange(watchPath string) (string, error) {
+	logger.Debug("Watching ", watchPath)
+
+	var fileChanged string
+
+	err := filepath.Walk(watchPath, func(path string, info os.FileInfo, err error) error {
+		if path == ".git" && info.IsDir() {
+			return filepath.SkipDir
+		}
+
+		for _, x := range w.IgnoreItems {
+			if x == path {
+				return filepath.SkipDir
+			}
+		}
+
+		// ignore hidden files
+		if filepath.Base(path)[0] == '.' {
+			return nil
+		}
+
+		ext := filepath.Ext(path)
+		if _, ok := w.AllowedExtensions[ext]; ok && info.ModTime().After(startTime) {
+			fileChanged = path
+			return errDetectedChange
+		}
+
+		return nil
+	})
+
+	if err != nil && err != errDetectedChange {
+		return "", err
+	}
+
+	return fileChanged, nil
 }
