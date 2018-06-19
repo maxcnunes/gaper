@@ -15,8 +15,13 @@ import (
 
 var logger = NewLogger("gaper")
 
+// default values
 var defaultExtensions = cli.StringSlice{"go"}
 var defaultPoolInterval = 500
+
+// exit statuses
+var exitStatusSuccess = 0
+var exitStatusError = 1
 
 // Config ...
 type Config struct {
@@ -97,12 +102,12 @@ func main() {
 			Value: &defaultExtensions,
 			Usage: "a comma-delimited list of file extensions to watch for changes",
 		},
-		cli.StringSliceFlag{
-			Name: "--no-restart-on, n",
-			Usage: "don't automatically restart the supervised program if it ends.\n" +
-				"\t\tIf \"error\", an exit code of 0 will still restart.\n" +
-				"\t\tIf \"exit\", no restart regardless of exit code.\n" +
-				"\t\tIf \"success\", no restart only if exit code is 0.",
+		cli.StringFlag{
+			Name: "no-restart-on, n",
+			Usage: "don't automatically restart the supervised program if it ends:\n" +
+				"\t\tif \"error\", an exit code of 0 will still restart.\n" +
+				"\t\tif \"exit\", no restart regardless of exit code.\n" +
+				"\t\tif \"success\", no restart only if exit code is 0.",
 		},
 	}
 
@@ -146,8 +151,9 @@ func runGaper(cfg *Config) error {
 	logger.Debug("    | verbose: ", cfg.Verbose)
 	logger.Debug("    | watch: ", cfg.WatchItems)
 	logger.Debug("    | ignore: ", cfg.IgnoreItems)
-	logger.Debug("    | poll-interval: ", cfg.PollInterval)
+	logger.Debug("    | poll interval: ", cfg.PollInterval)
 	logger.Debug("    | extensions: ", cfg.Extensions)
+	logger.Debug("    | no restart on: ", cfg.NoRestartOn)
 	logger.Debug("    | working directory: ", wd)
 
 	builder := NewBuilder(cfg.BuildPath, cfg.BinName, wd, cfg.BuildArgs)
@@ -184,7 +190,7 @@ func runGaper(cfg *Config) error {
 				changeRestart = false
 			} else {
 				logger.Debug("Detected program exit: ", err)
-				if err = handleProgramExit(builder, runner, err); err != nil {
+				if err = handleProgramExit(builder, runner, err, cfg.NoRestartOn); err != nil {
 					return err
 				}
 			}
@@ -215,10 +221,32 @@ func restart(builder Builder, runner Runner) error {
 	return nil
 }
 
-func handleProgramExit(builder Builder, runner Runner, err error) error {
-	_, ok := err.(*exec.ExitError)
+func handleProgramExit(builder Builder, runner Runner, err error, noRestartOn string) error {
+	exiterr, ok := err.(*exec.ExitError)
 	if !ok {
 		return fmt.Errorf("couldn't handle program crash restart: %v", err)
+	}
+
+	status, oks := exiterr.Sys().(syscall.WaitStatus)
+	if !oks {
+		return fmt.Errorf("couldn't resolve exit status: %v", err)
+	}
+
+	exitStatus := status.ExitStatus()
+
+	// if "error", an exit code of 0 will still restart.
+	if noRestartOn == "error" && exitStatus == exitStatusError {
+		return nil
+	}
+
+	// if "success", no restart only if exit code is 0.
+	if noRestartOn == "success" && exitStatus == exitStatusSuccess {
+		return nil
+	}
+
+	// if "exit", no restart regardless of exit code.
+	if noRestartOn == "exit" {
+		return nil
 	}
 
 	restart(builder, runner)

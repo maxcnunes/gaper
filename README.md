@@ -45,10 +45,10 @@ GLOBAL OPTIONS:
    --ignore value, -i value           list of folders or files to ignore for changes
    --poll-interval value, -p value    how often in milliseconds to poll watched files for changes (default: 500)
    --extensions value, -e value       a comma-delimited list of file extensions to watch for changes (default: "go")
-   ----no-restart-on value, -n value  don't automatically restart the executed program if it ends.
-                                        If "error", an exit code of 0 will still restart.
-                                        If "exit", no restart regardless of exit code.
-                                        If "success", no restart only if exit code is 0.
+   --no-restart-on value, -n value    don't automatically restart the executed program if it ends:
+                                        if "error", an exit code of 0 will still restart.
+                                        if "exit", no restart regardless of exit code.
+                                        if "success", no restart only if exit code is 0.
    --help, -h                         show help
    --version, -v                      print the version
 ```
