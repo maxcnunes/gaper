@@ -40,6 +40,13 @@ func (l *Logger) Debug(v ...interface{}) {
 	}
 }
 
+// Debugf ...
+func (l *Logger) Debugf(format string, v ...interface{}) {
+	if l.verbose {
+		l.logDebug.Printf(format, v...)
+	}
+}
+
 // Warn ...
 func (l *Logger) Warn(v ...interface{}) {
 	l.logWarn.Println(v...)

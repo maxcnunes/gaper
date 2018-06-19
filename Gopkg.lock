@@ -26,6 +26,15 @@
   version = "v1.0.3"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/mattn/go-zglob"
+  packages = [
+    ".",
+    "fastwalk"
+  ]
+  revision = "49693fbb3fe3c3a75fc4e4d6fb1d7cedcbdeb385"
+
+[[projects]]
   name = "github.com/urfave/cli"
   packages = ["."]
   revision = "cfb38830724cc34fedffe9a2a29fb54fa9169cd1"
@@ -40,6 +49,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "bd09f9274a4112aeb869a026bcf3ab61443289a245d3d353da6623f3327e7b4e"
+  inputs-digest = "01046dcc133438d0c6e244499b12395a2ef02264beec4752652b8c78c571a08e"
   solver-name = "gps-cdcl"
   solver-version = 1

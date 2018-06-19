@@ -2,9 +2,12 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"time"
+
+	zglob "github.com/mattn/go-zglob"
 )
 
 // Watcher ...
@@ -18,27 +21,37 @@ type Watcher struct {
 }
 
 // NewWatcher ...
-func NewWatcher(pollInterval int, watchItems []string, ignoreItems []string, extensions []string) *Watcher {
+func NewWatcher(pollInterval int, watchItems []string, ignoreItems []string, extensions []string) (*Watcher, error) {
 	allowedExts := make(map[string]bool)
 	for _, ext := range extensions {
 		allowedExts["."+ext] = true
+	}
+
+	watchMatches, err := resolveGlobMatches(watchItems)
+	if err != nil {
+		return nil, err
+	}
+
+	ignoreMatches, err := resolveGlobMatches(ignoreItems)
+	if err != nil {
+		return nil, err
 	}
 
 	return &Watcher{
 		Events:            make(chan string),
 		Errors:            make(chan error),
 		PollInterval:      pollInterval,
-		WatchItems:        watchItems,
-		IgnoreItems:       ignoreItems,
+		WatchItems:        watchMatches,
+		IgnoreItems:       ignoreMatches,
 		AllowedExtensions: allowedExts,
-	}
+	}, nil
 }
 
 var startTime = time.Now()
 var errDetectedChange = errors.New("done")
 
 // Watch ...
-func (w *Watcher) Watch() { // nolint: gocyclo
+func (w *Watcher) Watch() {
 	for {
 		for i := range w.WatchItems {
 			fileChanged, err := w.scanChange(w.WatchItems[i])
@@ -92,4 +105,20 @@ func (w *Watcher) scanChange(watchPath string) (string, error) {
 	}
 
 	return fileChanged, nil
+}
+
+func resolveGlobMatches(paths []string) ([]string, error) {
+	var result []string
+
+	for _, path := range paths {
+		matches, err := zglob.Glob(path)
+		if err != nil {
+			return nil, fmt.Errorf("couldn't resolve glob path %s: %v", path, err)
+		}
+
+		logger.Debugf("Resolved glob path %s: %v", path, matches)
+		result = append(result, matches...)
+	}
+
+	return result, nil
 }

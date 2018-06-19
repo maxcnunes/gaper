@@ -162,7 +162,10 @@ func runGaper(cfg *Config) error {
 		return fmt.Errorf("run error: %v", err)
 	}
 
-	watcher := NewWatcher(cfg.PollInterval, cfg.WatchItems, cfg.IgnoreItems, cfg.Extensions)
+	watcher, err := NewWatcher(cfg.PollInterval, cfg.WatchItems, cfg.IgnoreItems, cfg.Extensions)
+	if err != nil {
+		return fmt.Errorf("watcher error: %v", err)
+	}
 
 	go watcher.Watch()
 	for {
