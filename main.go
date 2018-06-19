@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"os/signal"
 	"path/filepath"
 	"syscall"
@@ -167,24 +168,40 @@ func runGaper(cfg *Config) error {
 		return fmt.Errorf("watcher error: %v", err)
 	}
 
+	var changeRestart bool
+
 	go watcher.Watch()
 	for {
 		select {
 		case event := <-watcher.Events:
 			logger.Debug("Detected new changed file: ", event)
+			changeRestart = true
 			restart(builder, runner)
 		case err := <-watcher.Errors:
 			return fmt.Errorf("error on watching files: %v", err)
+		case err := <-runner.Errors():
+			if changeRestart {
+				changeRestart = false
+			} else {
+				logger.Debug("Detected program exit: ", err)
+				if err = handleProgramExit(builder, runner, err); err != nil {
+					return err
+				}
+			}
 		default:
-			logger.Debug("Waiting watch event")
 			time.Sleep(time.Duration(cfg.PollInterval) * time.Millisecond)
 		}
 	}
 }
 
 func restart(builder Builder, runner Runner) error {
-	if err := runner.Kill(); err != nil {
-		return fmt.Errorf("kill error: %v", err)
+	logger.Debug("Restarting program")
+
+	// kill process if it is running
+	if !runner.Exited() {
+		if err := runner.Kill(); err != nil {
+			return fmt.Errorf("kill error: %v", err)
+		}
 	}
 
 	if err := builder.Build(); err != nil {
@@ -195,6 +212,16 @@ func restart(builder Builder, runner Runner) error {
 		return fmt.Errorf("run error: %v", err)
 	}
 
+	return nil
+}
+
+func handleProgramExit(builder Builder, runner Runner, err error) error {
+	_, ok := err.(*exec.ExitError)
+	if !ok {
+		return fmt.Errorf("couldn't handle program crash restart: %v", err)
+	}
+
+	restart(builder, runner)
 	return nil
 }
 

@@ -16,6 +16,8 @@ const OSWindows = "windows"
 type Runner interface {
 	Run() (*exec.Cmd, error)
 	Kill() error
+	Errors() chan error
+	Exited() bool
 }
 
 type runner struct {
@@ -24,6 +26,7 @@ type runner struct {
 	writer    io.Writer
 	command   *exec.Cmd
 	starttime time.Time
+	errors    chan error
 }
 
 // NewRunner ...
@@ -33,6 +36,7 @@ func NewRunner(writer io.Writer, bin string, args []string) Runner {
 		args:      args,
 		writer:    writer,
 		starttime: time.Now(),
+		errors:    make(chan error),
 	}
 }
 
@@ -91,6 +95,11 @@ func (r *runner) Exited() bool {
 	return r.command != nil && r.command.ProcessState != nil && r.command.ProcessState.Exited()
 }
 
+// Errors ...
+func (r *runner) Errors() chan error {
+	return r.errors
+}
+
 func (r *runner) runBin() error {
 	r.command = exec.Command(r.bin, r.args...) // nolint gas
 	stdout, err := r.command.StdoutPipe()
@@ -113,7 +122,13 @@ func (r *runner) runBin() error {
 	// TODO: handle or log errors
 	go io.Copy(r.writer, stdout) // nolint errcheck
 	go io.Copy(r.writer, stderr) // nolint errcheck
-	go r.command.Wait()          // nolint errcheck
+
+	// wait for exit errors
+	go func() {
+		if err := r.command.Wait(); err != nil {
+			r.errors <- err
+		}
+	}()
 
 	return nil
 }
