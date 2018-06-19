@@ -172,15 +172,7 @@ func runGaper(cfg *Config) error {
 		select {
 		case event := <-watcher.Events:
 			logger.Debug("Detected new changed file: ", event)
-			if err = runner.Kill(); err != nil {
-				return fmt.Errorf("kill error: %v", err)
-			}
-			if err = builder.Build(); err != nil {
-				return fmt.Errorf("build error: %v", err)
-			}
-			if _, err = runner.Run(); err != nil {
-				return fmt.Errorf("run error: %v", err)
-			}
+			restart(builder, runner)
 		case err := <-watcher.Errors:
 			return fmt.Errorf("error on watching files: %v", err)
 		default:
@@ -188,6 +180,22 @@ func runGaper(cfg *Config) error {
 			time.Sleep(time.Duration(cfg.PollInterval) * time.Millisecond)
 		}
 	}
+}
+
+func restart(builder Builder, runner Runner) error {
+	if err := runner.Kill(); err != nil {
+		return fmt.Errorf("kill error: %v", err)
+	}
+
+	if err := builder.Build(); err != nil {
+		return fmt.Errorf("build error: %v", err)
+	}
+
+	if _, err := runner.Run(); err != nil {
+		return fmt.Errorf("run error: %v", err)
+	}
+
+	return nil
 }
 
 func shutdown(runner Runner) {
