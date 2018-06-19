@@ -9,6 +9,7 @@ import (
 
 // Watcher ...
 type Watcher struct {
+	PollInterval      int
 	WatchItems        []string
 	IgnoreItems       []string
 	AllowedExtensions map[string]bool
@@ -17,7 +18,7 @@ type Watcher struct {
 }
 
 // NewWatcher ...
-func NewWatcher(watchItems []string, ignoreItems []string, extensions []string) *Watcher {
+func NewWatcher(pollInterval int, watchItems []string, ignoreItems []string, extensions []string) *Watcher {
 	allowedExts := make(map[string]bool)
 	for _, ext := range extensions {
 		allowedExts["."+ext] = true
@@ -26,6 +27,7 @@ func NewWatcher(watchItems []string, ignoreItems []string, extensions []string) 
 	return &Watcher{
 		Events:            make(chan string),
 		Errors:            make(chan error),
+		PollInterval:      pollInterval,
 		WatchItems:        watchItems,
 		IgnoreItems:       ignoreItems,
 		AllowedExtensions: allowedExts,
@@ -53,6 +55,7 @@ func (w *Watcher) Watch() { // nolint: gocyclo
 			if filepath.Base(path)[0] == '.' {
 				return nil
 			}
+		time.Sleep(time.Duration(w.PollInterval) * time.Millisecond)
 
 			ext := filepath.Ext(path)
 			if _, ok := w.AllowedExtensions[ext]; ok && info.ModTime().After(startTime) {
@@ -68,6 +71,5 @@ func (w *Watcher) Watch() { // nolint: gocyclo
 			w.Errors <- err
 		}
 
-		time.Sleep(500 * time.Millisecond)
 	}
 }
