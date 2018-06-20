@@ -21,22 +21,24 @@ type Runner interface {
 }
 
 type runner struct {
-	bin       string
-	args      []string
-	writer    io.Writer
-	command   *exec.Cmd
-	starttime time.Time
-	errors    chan error
+	bin          string
+	args         []string
+	writerStdout io.Writer
+	writerStderr io.Writer
+	command      *exec.Cmd
+	starttime    time.Time
+	errors       chan error
 }
 
 // NewRunner ...
-func NewRunner(writer io.Writer, bin string, args []string) Runner {
+func NewRunner(wStdout io.Writer, wStderr io.Writer, bin string, args []string) Runner {
 	return &runner{
-		bin:       bin,
-		args:      args,
-		writer:    writer,
-		starttime: time.Now(),
-		errors:    make(chan error),
+		bin:          bin,
+		args:         args,
+		writerStdout: wStdout,
+		writerStderr: wStderr,
+		starttime:    time.Now(),
+		errors:       make(chan error),
 	}
 }
 
@@ -112,6 +114,10 @@ func (r *runner) runBin() error {
 		return err
 	}
 
+	// TODO: handle or log errors
+	go io.Copy(r.writerStdout, stdout) // nolint errcheck
+	go io.Copy(r.writerStderr, stderr) // nolint errcheck
+
 	err = r.command.Start()
 	if err != nil {
 		return err
@@ -119,15 +125,9 @@ func (r *runner) runBin() error {
 
 	r.starttime = time.Now()
 
-	// TODO: handle or log errors
-	go io.Copy(r.writer, stdout) // nolint errcheck
-	go io.Copy(r.writer, stderr) // nolint errcheck
-
 	// wait for exit errors
 	go func() {
-		if err := r.command.Wait(); err != nil {
-			r.errors <- err
-		}
+		r.errors <- r.command.Wait()
 	}()
 
 	return nil

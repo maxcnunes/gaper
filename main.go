@@ -157,7 +157,7 @@ func runGaper(cfg *Config) error {
 	logger.Debug("    | working directory: ", wd)
 
 	builder := NewBuilder(cfg.BuildPath, cfg.BinName, wd, cfg.BuildArgs)
-	runner := NewRunner(os.Stdout, filepath.Join(wd, builder.Binary()), cfg.ProgramArgs)
+	runner := NewRunner(os.Stdout, os.Stderr, filepath.Join(wd, builder.Binary()), cfg.ProgramArgs)
 
 	if err = builder.Build(); err != nil {
 		return fmt.Errorf("build error: %v", err)
