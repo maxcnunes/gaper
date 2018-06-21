@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -10,7 +11,7 @@ import (
 
 func TestBuilderSuccessBuild(t *testing.T) {
 	bArgs := []string{}
-	bin := "srv"
+	bin := resolveBinNameByOS("srv")
 	dir := filepath.Join("testdata", "server")
 	wd, err := os.Getwd()
 	if err != nil {
@@ -48,5 +49,12 @@ func TestBuilderDefaultBinName(t *testing.T) {
 	dir := filepath.Join("testdata", "server")
 	wd := "/src/projects/project-name"
 	b := NewBuilder(dir, bin, wd, nil)
-	assert.Equal(t, b.Binary(), "project-name")
+	assert.Equal(t, b.Binary(), resolveBinNameByOS("project-name"))
+}
+
+func resolveBinNameByOS(name string) string {
+	if runtime.GOOS == OSWindows {
+		name += ".exe"
+	}
+	return name
 }

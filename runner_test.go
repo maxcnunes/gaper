@@ -27,12 +27,7 @@ func TestRunnerSuccessRun(t *testing.T) {
 
 	errCmd := <-runner.Errors()
 	assert.Nil(t, errCmd, "async error running binary")
-
-	if runtime.GOOS == OSWindows {
-		assert.Equal(t, "Gaper\r\n", stdout.String())
-	} else {
-		assert.Equal(t, "Gaper\n", stdout.String())
-	}
+	assert.Contains(t, stdout.String(), "Gaper Test Message")
 }
 
 func TestRunnerSuccessKill(t *testing.T) {

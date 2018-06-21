@@ -31,9 +31,8 @@ func TestWatcherGlobPath(t *testing.T) {
 	var extensions []string
 
 	w, err := NewWatcher(pollInterval, watchItems, ignoreItems, extensions)
-	file := filepath.Join("testdata", "server", "main_test.go")
 	assert.Nil(t, err, "wacher error")
-	assert.Equal(t, []string{file}, w.IgnoreItems)
+	assert.Equal(t, []string{"testdata/server/main_test.go"}, w.IgnoreItems)
 }
 
 func TestWatcherWatchChange(t *testing.T) {

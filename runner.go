@@ -87,8 +87,12 @@ func (r *runner) Kill() error {
 	// Wait for our process to die before we return or hard kill after 3 sec
 	select {
 	case <-time.After(3 * time.Second):
-		if err := r.command.Process.Kill(); err != nil && err.Error() != errFinished.Error() {
-			return fmt.Errorf("failed to kill: %v", err)
+		if err := r.command.Process.Kill(); err != nil {
+			errMsg := err.Error()
+			// ignore error if the processed has been killed already
+			if errMsg != errFinished.Error() && errMsg != os.ErrInvalid.Error() {
+				return fmt.Errorf("failed to kill: %v", err)
+			}
 		}
 	case <-done:
 	}
