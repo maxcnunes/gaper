@@ -1,0 +1,11 @@
+builds:
+  - main: main.go
+    binary: gaper
+    goos:
+      - windows
+      - darwin
+      - linux
+    goarch:
+      - amd64
+    env:
+      - CGO_ENABLED=0

@@ -7,6 +7,7 @@ gaper
 [![Coverage Status](https://codecov.io/gh/maxcnunes/gaper/branch/master/graph/badge.svg)](https://codecov.io/gh/maxcnunes/gaper)
 [![Go Doc](https://img.shields.io/badge/godoc-reference-blue.svg?style=flat-square)](http://godoc.org/github.com/maxcnunes/gaper)
 [![Go Report Card](https://goreportcard.com/badge/github.com/maxcnunes/gaper)](https://goreportcard.com/report/github.com/maxcnunes/gaper)
+[![Powered By: GoReleaser](https://img.shields.io/badge/powered%20by-goreleaser-green.svg?style=flat-square)](https://github.com/goreleaser)
 
 Restarts programs when they crash or a watched file changes.
 

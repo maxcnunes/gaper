@@ -64,7 +64,7 @@ func (r *runner) Run() (*exec.Cmd, error) {
 }
 
 // Kill the current process running for the Golang project
-func (r *runner) Kill() error {
+func (r *runner) Kill() error { // nolint gocyclo
 	if r.command == nil || r.command.Process == nil {
 		return nil
 	}
