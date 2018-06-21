@@ -15,6 +15,9 @@ import (
 	"github.com/urfave/cli"
 )
 
+// build info
+var version = "dev"
+
 var logger = NewLogger("gaper")
 
 // exit statuses
@@ -55,6 +58,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "gaper"
 	app.Usage = "Used to restart programs when they crash or a watched file changes"
+	app.Version = version
 
 	app.Action = func(c *cli.Context) {
 		args := parseArgs(c)
