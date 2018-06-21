@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -11,6 +12,9 @@ import (
 
 // OSWindows ...
 const OSWindows = "windows"
+
+// os errors
+var errFinished = errors.New("os: process already finished")
 
 // Runner ...
 type Runner interface {
@@ -28,6 +32,7 @@ type runner struct {
 	command      *exec.Cmd
 	starttime    time.Time
 	errors       chan error
+	end          chan bool // used internally by Kill to wait a process die
 }
 
 // NewRunner ...
@@ -39,6 +44,7 @@ func NewRunner(wStdout io.Writer, wStderr io.Writer, bin string, args []string) 
 		writerStderr: wStderr,
 		starttime:    time.Now(),
 		errors:       make(chan error),
+		end:          make(chan bool),
 	}
 }
 
@@ -46,13 +52,12 @@ func NewRunner(wStdout io.Writer, wStderr io.Writer, bin string, args []string) 
 func (r *runner) Run() (*exec.Cmd, error) {
 	logger.Info("Starting program")
 
-	if r.command == nil || r.Exited() {
-		if err := r.runBin(); err != nil {
-			return nil, fmt.Errorf("error running: %v", err)
-		}
-
-		time.Sleep(250 * time.Millisecond)
+	if r.command != nil && !r.Exited() {
 		return r.command, nil
+	}
+
+	if err := r.runBin(); err != nil {
+		return nil, fmt.Errorf("error running: %v", err)
 	}
 
 	return r.command, nil
@@ -66,7 +71,7 @@ func (r *runner) Kill() error {
 
 	done := make(chan error)
 	go func() {
-		r.command.Wait() // nolint errcheck
+		<-r.end
 		close(done)
 	}()
 
@@ -82,7 +87,7 @@ func (r *runner) Kill() error {
 	// Wait for our process to die before we return or hard kill after 3 sec
 	select {
 	case <-time.After(3 * time.Second):
-		if err := r.command.Process.Kill(); err != nil {
+		if err := r.command.Process.Kill(); err != nil && err.Error() != errFinished.Error() {
 			return fmt.Errorf("failed to kill: %v", err)
 		}
 	case <-done:
@@ -128,6 +133,7 @@ func (r *runner) runBin() error {
 	// wait for exit errors
 	go func() {
 		r.errors <- r.command.Wait()
+		r.end <- true
 	}()
 
 	return nil

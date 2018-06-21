@@ -12,7 +12,6 @@ import (
 type Builder interface {
 	Build() error
 	Binary() string
-	Errors() string
 }
 
 type builder struct {
@@ -25,8 +24,9 @@ type builder struct {
 
 // NewBuilder ...
 func NewBuilder(dir string, bin string, wd string, buildArgs []string) Builder {
-	if len(bin) == 0 {
-		bin = "bin"
+	// resolve bin name by current folder name
+	if bin == "" {
+		bin = filepath.Base(wd)
 	}
 
 	// does not work on Windows without the ".exe" extension
@@ -45,11 +45,6 @@ func (b *builder) Binary() string {
 	return b.binary
 }
 
-// Errors ...
-func (b *builder) Errors() string {
-	return b.errors
-}
-
 // Build ...
 func (b *builder) Build() error {
 	logger.Info("Building program")
@@ -64,14 +59,8 @@ func (b *builder) Build() error {
 		return err
 	}
 
-	if command.ProcessState.Success() {
-		b.errors = ""
-	} else {
-		b.errors = string(output)
-	}
-
-	if len(b.errors) > 0 {
-		return fmt.Errorf(b.errors)
+	if !command.ProcessState.Success() {
+		return fmt.Errorf("error building: %s", output)
 	}
 
 	return nil

@@ -53,6 +53,14 @@ GLOBAL OPTIONS:
    --version, -v                      print the version
 ```
 
+### Examples
+
+Ignore watch over all test files:
+
+```
+--ignore './**/*_test.go'
+```
+
 ## Contributing
 
 See the [Contributing guide](/CONTRIBUTING.md) for steps on how to contribute to this project.

@@ -15,10 +15,6 @@ import (
 
 var logger = NewLogger("gaper")
 
-// default values
-var defaultExtensions = cli.StringSlice{"go"}
-var defaultPoolInterval = 500
-
 // exit statuses
 var exitStatusSuccess = 0
 var exitStatusError = 1
@@ -94,12 +90,10 @@ func main() {
 		},
 		cli.IntFlag{
 			Name:  "poll-interval, p",
-			Value: defaultPoolInterval,
 			Usage: "how often in milliseconds to poll watched files for changes",
 		},
 		cli.StringSliceFlag{
 			Name:  "extensions, e",
-			Value: &defaultExtensions,
 			Usage: "a comma-delimited list of file extensions to watch for changes",
 		},
 		cli.StringFlag{
@@ -133,11 +127,6 @@ func runGaper(cfg *Config) error {
 	wd, err := os.Getwd()
 	if err != nil {
 		return err
-	}
-
-	// resolve bin name by current folder name
-	if cfg.BinName == "" {
-		cfg.BinName = filepath.Base(wd)
 	}
 
 	if len(cfg.WatchItems) == 0 {
@@ -182,7 +171,9 @@ func runGaper(cfg *Config) error {
 		case event := <-watcher.Events:
 			logger.Debug("Detected new changed file: ", event)
 			changeRestart = true
-			restart(builder, runner)
+			if err := restart(builder, runner); err != nil {
+				return err
+			}
 		case err := <-watcher.Errors:
 			return fmt.Errorf("error on watching files: %v", err)
 		case err := <-runner.Errors():
@@ -249,8 +240,7 @@ func handleProgramExit(builder Builder, runner Runner, err error, noRestartOn st
 		return nil
 	}
 
-	restart(builder, runner)
-	return nil
+	return restart(builder, runner)
 }
 
 func shutdown(runner Runner) {

@@ -27,3 +27,26 @@ func TestBuilderSuccessBuild(t *testing.T) {
 	}
 	assert.NotNil(t, file, "binary not written properly")
 }
+
+func TestBuilderFailureBuild(t *testing.T) {
+	bArgs := []string{}
+	bin := "srv"
+	dir := filepath.Join("testdata", "build-failure")
+	wd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("couldn't get current working directory: %v", err)
+	}
+
+	b := NewBuilder(dir, bin, wd, bArgs)
+	err = b.Build()
+	assert.NotNil(t, err, "build error")
+	assert.Equal(t, err.Error(), "exit status 2")
+}
+
+func TestBuilderDefaultBinName(t *testing.T) {
+	bin := ""
+	dir := filepath.Join("testdata", "server")
+	wd := "/src/projects/project-name"
+	b := NewBuilder(dir, bin, wd, nil)
+	assert.Equal(t, b.Binary(), "project-name")
+}

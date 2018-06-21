@@ -10,6 +10,12 @@ import (
 	zglob "github.com/mattn/go-zglob"
 )
 
+// DefaultExtensions used by the watcher
+var DefaultExtensions = []string{"go"}
+
+// DefaultPoolInterval used by the watcher
+var DefaultPoolInterval = 500
+
 // Watcher ...
 type Watcher struct {
 	PollInterval      int
@@ -22,6 +28,14 @@ type Watcher struct {
 
 // NewWatcher ...
 func NewWatcher(pollInterval int, watchItems []string, ignoreItems []string, extensions []string) (*Watcher, error) {
+	if pollInterval == 0 {
+		pollInterval = DefaultPoolInterval
+	}
+
+	if len(extensions) == 0 {
+		extensions = DefaultExtensions
+	}
+
 	allowedExts := make(map[string]bool)
 	for _, ext := range extensions {
 		allowedExts["."+ext] = true
@@ -76,19 +90,15 @@ func (w *Watcher) scanChange(watchPath string) (string, error) {
 	var fileChanged string
 
 	err := filepath.Walk(watchPath, func(path string, info os.FileInfo, err error) error {
-		if path == ".git" && info.IsDir() {
-			return filepath.SkipDir
+		// ignore hidden files and directories
+		if filepath.Base(path)[0] == '.' {
+			return nil
 		}
 
 		for _, x := range w.IgnoreItems {
 			if x == path {
 				return filepath.SkipDir
 			}
-		}
-
-		// ignore hidden files
-		if filepath.Base(path)[0] == '.' {
-			return nil
 		}
 
 		ext := filepath.Ext(path)
