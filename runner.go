@@ -10,13 +10,13 @@ import (
 	"time"
 )
 
-// OSWindows ...
+// OSWindows is used to check if current OS is a Windows
 const OSWindows = "windows"
 
 // os errors
 var errFinished = errors.New("os: process already finished")
 
-// Runner ...
+// Runner is a interface for the run process
 type Runner interface {
 	Run() (*exec.Cmd, error)
 	Kill() error
@@ -35,7 +35,7 @@ type runner struct {
 	end          chan bool // used internally by Kill to wait a process die
 }
 
-// NewRunner ...
+// NewRunner creates a new runner
 func NewRunner(wStdout io.Writer, wStderr io.Writer, bin string, args []string) Runner {
 	return &runner{
 		bin:          bin,
@@ -48,7 +48,7 @@ func NewRunner(wStdout io.Writer, wStderr io.Writer, bin string, args []string) 
 	}
 }
 
-// Run ...
+// Run executes the project binary
 func (r *runner) Run() (*exec.Cmd, error) {
 	logger.Info("Starting program")
 
@@ -63,7 +63,7 @@ func (r *runner) Run() (*exec.Cmd, error) {
 	return r.command, nil
 }
 
-// Kill ...
+// Kill the current process running for the Golang project
 func (r *runner) Kill() error {
 	if r.command == nil || r.command.Process == nil {
 		return nil
@@ -97,12 +97,12 @@ func (r *runner) Kill() error {
 	return nil
 }
 
-// Exited ...
+// Exited checks if the process has exited
 func (r *runner) Exited() bool {
 	return r.command != nil && r.command.ProcessState != nil && r.command.ProcessState.Exited()
 }
 
-// Errors ...
+// Errors get errors occurred during the build
 func (r *runner) Errors() chan error {
 	return r.errors
 }

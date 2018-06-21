@@ -16,7 +16,7 @@ var DefaultExtensions = []string{"go"}
 // DefaultPoolInterval used by the watcher
 var DefaultPoolInterval = 500
 
-// Watcher ...
+// Watcher is a interface for the watch process
 type Watcher struct {
 	PollInterval      int
 	WatchItems        []string
@@ -26,7 +26,7 @@ type Watcher struct {
 	Errors            chan error
 }
 
-// NewWatcher ...
+// NewWatcher creates a new watcher
 func NewWatcher(pollInterval int, watchItems []string, ignoreItems []string, extensions []string) (*Watcher, error) {
 	if pollInterval == 0 {
 		pollInterval = DefaultPoolInterval
@@ -64,7 +64,7 @@ func NewWatcher(pollInterval int, watchItems []string, ignoreItems []string, ext
 var startTime = time.Now()
 var errDetectedChange = errors.New("done")
 
-// Watch ...
+// Watch starts watching for file changes
 func (w *Watcher) Watch() {
 	for {
 		for i := range w.WatchItems {

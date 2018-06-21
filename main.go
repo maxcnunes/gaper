@@ -1,3 +1,5 @@
+// Package gaper implements a supervisor restarts a go project
+// when it crashes or a watched file changes
 package main
 
 import (
@@ -19,7 +21,7 @@ var logger = NewLogger("gaper")
 var exitStatusSuccess = 0
 var exitStatusError = 1
 
-// Config ...
+// Config contains all settings supported by gaper
 type Config struct {
 	BinName         string
 	BuildPath       string

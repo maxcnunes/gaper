@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-// Builder ...
+// Builder is a interface for the build process
 type Builder interface {
 	Build() error
 	Binary() string
@@ -22,7 +22,7 @@ type builder struct {
 	buildArgs []string
 }
 
-// NewBuilder ...
+// NewBuilder creates a new builder
 func NewBuilder(dir string, bin string, wd string, buildArgs []string) Builder {
 	// resolve bin name by current folder name
 	if bin == "" {
@@ -40,12 +40,12 @@ func NewBuilder(dir string, bin string, wd string, buildArgs []string) Builder {
 	return &builder{dir: dir, binary: bin, wd: wd, buildArgs: buildArgs}
 }
 
-// Binary ...
+// Binary returns its build binary's path
 func (b *builder) Binary() string {
 	return b.binary
 }
 
-// Build ...
+// Build the Golang project set for this builder
 func (b *builder) Build() error {
 	logger.Info("Building program")
 	args := append([]string{"go", "build", "-o", filepath.Join(b.wd, b.binary)}, b.buildArgs...)
