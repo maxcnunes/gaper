@@ -4,3 +4,4 @@ gaper
 srv
 vendor
 coverage.out
+.DS_Store
