@@ -1,5 +1,13 @@
-gaper
-=====
+<p align="center">
+  <img width="200px" src="https://raw.githubusercontent.com/maxcnunes/gaper/master/gopher-gaper.png">
+  <h3 align="center">gaper</h3>
+  <p align="center">
+   Restarts programs when they crash or a watched file changes.<br />
+   <b>Aimed to be used in development only.</b>
+  </p>
+</p>
+
+---
 
 [![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE.md)
 [![Linux - Build Status](https://travis-ci.org/maxcnunes/gaper.svg?branch=master)](https://travis-ci.org/maxcnunes/gaper)
@@ -8,10 +16,6 @@ gaper
 [![Go Doc](https://img.shields.io/badge/godoc-reference-blue.svg?style=flat-square)](http://godoc.org/github.com/maxcnunes/gaper)
 [![Go Report Card](https://goreportcard.com/badge/github.com/maxcnunes/gaper)](https://goreportcard.com/report/github.com/maxcnunes/gaper)
 [![Powered By: GoReleaser](https://img.shields.io/badge/powered%20by-goreleaser-green.svg?style=flat-square)](https://github.com/goreleaser)
-
-Restarts programs when they crash or a watched file changes.
-
-**NOT STABLE YET, STILL IN DEVELOPMENT**: Please, check out [this ticket](https://github.com/maxcnunes/gaper/issues/1) to follow its progress.
 
 ## Installation
 
