@@ -19,7 +19,7 @@ ifndef LINTER
 endif
 
 build:
-	@go build .
+	@go build -o ./gaper cmd/gaper/main.go
 
 ## lint: Validate golang code
 lint:
@@ -30,7 +30,7 @@ lint:
 		--vendor ./...
 
 test:
-	@go test -v -coverpkg $(COVER_PACKAGES) \
+	@go test -p=1 -coverpkg $(COVER_PACKAGES) \
 		-covermode=atomic -coverprofile=coverage.out $(TEST_PACKAGES)
 
 cover: test

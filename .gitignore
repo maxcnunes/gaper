@@ -1,7 +1,9 @@
 # binaries
 *.exe
-gaper
+/gaper
 srv
 vendor
 coverage.out
 .DS_Store
+testdata/server/server
+dist

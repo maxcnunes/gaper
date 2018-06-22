@@ -1,4 +1,4 @@
-package main
+package gaper
 
 import (
 	"bytes"
@@ -28,6 +28,7 @@ func TestRunnerSuccessRun(t *testing.T) {
 	errCmd := <-runner.Errors()
 	assert.Nil(t, errCmd, "async error running binary")
 	assert.Contains(t, stdout.String(), "Gaper Test Message")
+	assert.Equal(t, stderr.String(), "")
 }
 
 func TestRunnerSuccessKill(t *testing.T) {

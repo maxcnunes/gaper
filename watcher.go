@@ -1,4 +1,4 @@
-package main
+package gaper
 
 import (
 	"errors"
@@ -9,12 +9,6 @@ import (
 
 	zglob "github.com/mattn/go-zglob"
 )
-
-// DefaultExtensions used by the watcher
-var DefaultExtensions = []string{"go"}
-
-// DefaultPoolInterval used by the watcher
-var DefaultPoolInterval = 500
 
 // Watcher is a interface for the watch process
 type Watcher struct {
@@ -123,7 +117,7 @@ func resolveGlobMatches(paths []string) ([]string, error) {
 	for _, path := range paths {
 		matches, err := zglob.Glob(path)
 		if err != nil {
-			return nil, fmt.Errorf("couldn't resolve glob path %s: %v", path, err)
+			return nil, fmt.Errorf("couldn't resolve glob path \"%s\": %v", path, err)
 		}
 
 		logger.Debugf("Resolved glob path %s: %v", path, matches)

@@ -7,10 +7,12 @@ go:
   - 1.10.x
   # - master
 
-script:
+before_script:
   - go version
   - make setup
   - make lint
+
+script:
   - make test
 
 after_success:

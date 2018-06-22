@@ -2,7 +2,8 @@
   <img width="200px" src="https://raw.githubusercontent.com/maxcnunes/gaper/master/gopher-gaper.png">
   <h3 align="center">gaper</h3>
   <p align="center">
-   Restarts programs when they crash or a watched file changes.<br />
+   Used to build and restart a Go project when it crashes or some watched file changes
+   <br />
    <b>Aimed to be used in development only.</b>
   </p>
 </p>
@@ -20,7 +21,7 @@
 ## Installation
 
 ```
-go get -u github.com/maxcnunes/gaper
+go get -u github.com/maxcnunes/gaper/cmd/gaper
 ```
 
 ## Changelog
@@ -31,32 +32,34 @@ See [Releases](https://github.com/maxcnunes/gaper/releases) for detailed history
 
 ```
 NAME:
-   gaper - Used to restart programs when they crash or a watched file changes
+   gaper - Used to build and restart a Go project when it crashes or some watched file changes
 
 USAGE:
    gaper [global options] command [command options] [arguments...]
 
 VERSION:
-   0.0.0
+   version
 
 COMMANDS:
      help, h  Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
-   --bin-name value                   name for the binary built by Gaper for the executed program
-   --build-path value                 path to the program source code
-   --build-args value                 build arguments passed to the program
-   --verbose                          turns on the verbose messages from Gaper
-   --watch value, -w value            list of folders or files to watch for changes
-   --ignore value, -i value           list of folders or files to ignore for changes
-   --poll-interval value, -p value    how often in milliseconds to poll watched files for changes (default: 500)
-   --extensions value, -e value       a comma-delimited list of file extensions to watch for changes (default: "go")
-   --no-restart-on value, -n value    don't automatically restart the executed program if it ends:
-                                        if "error", an exit code of 0 will still restart.
-                                        if "exit", no restart regardless of exit code.
-                                        if "success", no restart only if exit code is 0.
-   --help, -h                         show help
-   --version, -v                      print the version
+   --bin-name value                 name for the binary built by gaper for the executed program (default current directory name)
+   --build-path value               path to the program source code (default: ".")
+   --build-args value               arguments used on building the program
+   --program-args value             arguments used on executing the program
+   --verbose                        turns on the verbose messages from gaper
+   --watch value, -w value          list of folders or files to watch for changes
+   --ignore value, -i value         list of folders or files to ignore for changes
+                                      (always ignores all hidden files and directories)
+   --poll-interval value, -p value  how often in milliseconds to poll watched files for changes (default: 500)
+   --extensions value, -e value     a comma-delimited list of file extensions to watch for changes (default: "go")
+   --no-restart-on value, -n value  don't automatically restart the supervised program if it ends:
+                                      if "error", an exit code of 0 will still restart.
+                                      if "exit", no restart regardless of exit code.
+                                      if "success", no restart only if exit code is 0.
+   --help, -h                       show help
+   --version, -v                    print the version
 ```
 
 ### Examples
