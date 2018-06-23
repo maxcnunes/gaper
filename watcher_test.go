@@ -19,7 +19,7 @@ func TestWatcherDefaultValues(t *testing.T) {
 
 	assert.Nil(t, err, "wacher error")
 	assert.Equal(t, 500, w.PollInterval)
-	assert.Equal(t, watchItems, w.WatchItems)
+	assert.Equal(t, map[string]bool{"testdata/server": true}, w.WatchItems)
 	assert.Len(t, w.IgnoreItems, 0)
 	assert.Equal(t, map[string]bool{".go": true}, w.AllowedExtensions)
 }
@@ -32,7 +32,18 @@ func TestWatcherGlobPath(t *testing.T) {
 
 	w, err := NewWatcher(pollInterval, watchItems, ignoreItems, extensions)
 	assert.Nil(t, err, "wacher error")
-	assert.Equal(t, []string{"testdata/server/main_test.go"}, w.IgnoreItems)
+	assert.Equal(t, map[string]bool{"testdata/server/main_test.go": true}, w.IgnoreItems)
+}
+
+func TestWatcherRemoveOverlapdPaths(t *testing.T) {
+	pollInterval := 0
+	watchItems := []string{filepath.Join("testdata", "server")}
+	ignoreItems := []string{"./testdata/**/*", "./testdata/server"}
+	var extensions []string
+
+	w, err := NewWatcher(pollInterval, watchItems, ignoreItems, extensions)
+	assert.Nil(t, err, "wacher error")
+	assert.Equal(t, map[string]bool{"./testdata/server": true}, w.IgnoreItems)
 }
 
 func TestWatcherWatchChange(t *testing.T) {
