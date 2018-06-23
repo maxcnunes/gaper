@@ -3,6 +3,7 @@ package gaper
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 	"time"
 
@@ -17,9 +18,14 @@ func TestWatcherDefaultValues(t *testing.T) {
 
 	w, err := NewWatcher(pollInterval, watchItems, ignoreItems, extensions)
 
+	expectedPath := "testdata/server"
+	if runtime.GOOS == OSWindows {
+		expectedPath = "testdata\\server"
+	}
+
 	assert.Nil(t, err, "wacher error")
 	assert.Equal(t, 500, w.PollInterval)
-	assert.Equal(t, map[string]bool{"testdata/server": true}, w.WatchItems)
+	assert.Equal(t, map[string]bool{expectedPath: true}, w.WatchItems)
 	assert.Len(t, w.IgnoreItems, 0)
 	assert.Equal(t, map[string]bool{".go": true}, w.AllowedExtensions)
 }

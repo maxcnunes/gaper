@@ -2,7 +2,7 @@ version: "{build}"
 
 # Source Config
 
-clone_folder: c:\gopath\src\github.com\golang\gaper
+clone_folder: c:\gopath\src\github.com\maxcnunes\gaper
 
 # Build host
 
@@ -27,5 +27,5 @@ build: false
 deploy: false
 
 test_script:
-  - go build github.com/golang/gaper
+  - go build github.com/maxcnunes/gaper/cmd/gaper
   - make test
