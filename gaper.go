@@ -145,17 +145,15 @@ func restart(builder Builder, runner Runner) error {
 }
 
 func handleProgramExit(builder Builder, runner Runner, err error, noRestartOn string) error {
-	exiterr, ok := err.(*exec.ExitError)
-	if !ok {
-		return fmt.Errorf("couldn't handle program crash restart: %v", err)
-	}
+	var exitStatus int
+	if exiterr, ok := err.(*exec.ExitError); ok {
+		status, oks := exiterr.Sys().(syscall.WaitStatus)
+		if !oks {
+			return fmt.Errorf("couldn't resolve exit status: %v", err)
+		}
 
-	status, oks := exiterr.Sys().(syscall.WaitStatus)
-	if !oks {
-		return fmt.Errorf("couldn't resolve exit status: %v", err)
+		exitStatus = status.ExitStatus()
 	}
-
-	exitStatus := status.ExitStatus()
 
 	// if "error", an exit code of 0 will still restart.
 	if noRestartOn == "error" && exitStatus == exitStatusError {
