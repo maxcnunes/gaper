@@ -88,12 +88,12 @@ func (w *Watcher) scanChange(watchPath string) (string, error) {
 
 	err := filepath.Walk(watchPath, func(path string, info os.FileInfo, err error) error {
 		// always ignore hidden files and directories
-		if filepath.Base(path)[0] == '.' {
-			return nil
+		if dir := filepath.Base(path); dir[0] == '.' && dir != "." {
+			return skipFile(info)
 		}
 
 		if _, ignored := w.IgnoreItems[path]; ignored {
-			return filepath.SkipDir
+			return skipFile(info)
 		}
 
 		ext := filepath.Ext(path)
@@ -174,4 +174,11 @@ func removeOverlappedPaths(mapPaths map[string]bool) {
 			delete(mapPaths, p)
 		}
 	}
+}
+
+func skipFile(info os.FileInfo) error {
+	if info.IsDir() {
+		return filepath.SkipDir
+	}
+	return nil
 }
