@@ -150,6 +150,11 @@ func resolvePaths(paths []string, extensions map[string]bool) (map[string]bool, 
 // remove overlapped paths so it makes the scan for changes later faster and simpler
 func removeOverlappedPaths(mapPaths map[string]bool) {
 	for p1 := range mapPaths {
+		// skip to next item if this path has already been checked
+		if v, ok := mapPaths[p1]; ok && !v {
+			continue
+		}
+
 		for p2 := range mapPaths {
 			if p1 == p2 {
 				continue
