@@ -95,7 +95,8 @@ func Run(cfg *Config) error { // nolint: gocyclo
 		return fmt.Errorf("watcher error: %v", err)
 	}
 
-	var changeRestart bool
+	// flag to know if an exit was caused by a restart from a file changing
+	changeRestart := false
 
 	go watcher.Watch()
 	for {
@@ -109,13 +110,16 @@ func Run(cfg *Config) error { // nolint: gocyclo
 		case err := <-watcher.Errors:
 			return fmt.Errorf("error on watching files: %v", err)
 		case err := <-runner.Errors():
+			logger.Debug("Detected program exit: ", err)
+
+			// ignore exit by change
 			if changeRestart {
 				changeRestart = false
-			} else {
-				logger.Debug("Detected program exit: ", err)
-				if err = handleProgramExit(builder, runner, err, cfg.NoRestartOn); err != nil {
-					return err
-				}
+				continue
+			}
+
+			if err = handleProgramExit(builder, runner, err, cfg.NoRestartOn); err != nil {
+				return err
 			}
 		default:
 			time.Sleep(time.Duration(cfg.PollInterval) * time.Millisecond)
