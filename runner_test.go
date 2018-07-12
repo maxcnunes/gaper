@@ -2,7 +2,9 @@ package gaper
 
 import (
 	"bytes"
+	"errors"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"testing"
@@ -47,4 +49,33 @@ func TestRunnerSuccessKill(t *testing.T) {
 
 	errCmd := <-runner.Errors()
 	assert.NotNil(t, errCmd, "kill program")
+}
+
+func TestRunnerExitedNotStarted(t *testing.T) {
+	runner := NewRunner(os.Stdout, os.Stderr, "", nil)
+	assert.Equal(t, runner.Exited(), false)
+}
+
+func TestRunnerExitStatusNonExitError(t *testing.T) {
+	runner := NewRunner(os.Stdout, os.Stderr, "", nil)
+	err := errors.New("non exec.ExitError")
+	assert.Equal(t, runner.ExitStatus(err), 0)
+}
+
+func testExit() {
+	os.Exit(1)
+}
+
+func TestRunnerExitStatusExitError(t *testing.T) {
+	if os.Getenv("TEST_EXIT") == "1" {
+		testExit()
+		return
+	}
+
+	cmd := exec.Command(os.Args[0], "-test.run=TestRunnerExitStatusExitError")
+	cmd.Env = append(os.Environ(), "TEST_EXIT=1")
+	err := cmd.Run()
+
+	runner := NewRunner(os.Stdout, os.Stderr, "", nil)
+	assert.Equal(t, runner.ExitStatus(err), 1)
 }

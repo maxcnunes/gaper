@@ -27,7 +27,6 @@ func main() {
 			PollInterval:      c.Int("poll-interval"),
 			Extensions:        c.StringSlice("extensions"),
 			NoRestartOn:       c.String("no-restart-on"),
-			ExitOnSIGINT:      true,
 		}
 	}
 
@@ -38,7 +37,10 @@ func main() {
 
 	app.Action = func(c *cli.Context) {
 		args := parseArgs(c)
-		if err := gaper.Run(args); err != nil {
+		chOSSiginal := make(chan os.Signal, 2)
+		logger.Verbose(args.Verbose)
+
+		if err := gaper.Run(args, chOSSiginal); err != nil {
 			logger.Error(err)
 			os.Exit(1)
 		}

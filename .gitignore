@@ -7,3 +7,4 @@ coverage.out
 .DS_Store
 testdata/server/server
 dist
+test-srv

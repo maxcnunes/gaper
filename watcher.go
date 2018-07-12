@@ -12,17 +12,24 @@ import (
 )
 
 // Watcher is a interface for the watch process
-type Watcher struct {
-	PollInterval      int
-	WatchItems        map[string]bool
-	IgnoreItems       map[string]bool
-	AllowedExtensions map[string]bool
-	Events            chan string
-	Errors            chan error
+type Watcher interface {
+	Watch()
+	Errors() chan error
+	Events() chan string
+}
+
+// watcher is a interface for the watch process
+type watcher struct {
+	pollInterval      int
+	watchItems        map[string]bool
+	ignoreItems       map[string]bool
+	allowedExtensions map[string]bool
+	events            chan string
+	errors            chan error
 }
 
 // NewWatcher creates a new watcher
-func NewWatcher(pollInterval int, watchItems []string, ignoreItems []string, extensions []string) (*Watcher, error) {
+func NewWatcher(pollInterval int, watchItems []string, ignoreItems []string, extensions []string) (Watcher, error) {
 	if pollInterval == 0 {
 		pollInterval = DefaultPoolInterval
 	}
@@ -48,13 +55,13 @@ func NewWatcher(pollInterval int, watchItems []string, ignoreItems []string, ext
 
 	logger.Debugf("Resolved watch paths: %v", watchPaths)
 	logger.Debugf("Resolved ignore paths: %v", ignorePaths)
-	return &Watcher{
-		Events:            make(chan string),
-		Errors:            make(chan error),
-		PollInterval:      pollInterval,
-		WatchItems:        watchPaths,
-		IgnoreItems:       ignorePaths,
-		AllowedExtensions: allowedExts,
+	return &watcher{
+		events:            make(chan string),
+		errors:            make(chan error),
+		pollInterval:      pollInterval,
+		watchItems:        watchPaths,
+		ignoreItems:       ignorePaths,
+		allowedExtensions: allowedExts,
 	}, nil
 }
 
@@ -62,26 +69,37 @@ var startTime = time.Now()
 var errDetectedChange = errors.New("done")
 
 // Watch starts watching for file changes
-func (w *Watcher) Watch() {
+func (w *watcher) Watch() {
 	for {
-		for watchPath := range w.WatchItems {
+		for watchPath := range w.watchItems {
 			fileChanged, err := w.scanChange(watchPath)
 			if err != nil {
-				w.Errors <- err
+				w.errors <- err
 				return
 			}
 
 			if fileChanged != "" {
-				w.Events <- fileChanged
+				w.events <- fileChanged
 				startTime = time.Now()
 			}
 		}
 
-		time.Sleep(time.Duration(w.PollInterval) * time.Millisecond)
+		time.Sleep(time.Duration(w.pollInterval) * time.Millisecond)
 	}
 }
 
-func (w *Watcher) scanChange(watchPath string) (string, error) {
+// Events get events occurred during the watching
+// these events are emited only a file changing is detected
+func (w *watcher) Events() chan string {
+	return w.events
+}
+
+// Errors get errors occurred during the watching
+func (w *watcher) Errors() chan error {
+	return w.errors
+}
+
+func (w *watcher) scanChange(watchPath string) (string, error) {
 	logger.Debug("Watching ", watchPath)
 
 	var fileChanged string
@@ -92,12 +110,12 @@ func (w *Watcher) scanChange(watchPath string) (string, error) {
 			return skipFile(info)
 		}
 
-		if _, ignored := w.IgnoreItems[path]; ignored {
+		if _, ignored := w.ignoreItems[path]; ignored {
 			return skipFile(info)
 		}
 
 		ext := filepath.Ext(path)
-		if _, ok := w.AllowedExtensions[ext]; ok && info.ModTime().After(startTime) {
+		if _, ok := w.allowedExtensions[ext]; ok && info.ModTime().After(startTime) {
 			fileChanged = path
 			return errDetectedChange
 		}

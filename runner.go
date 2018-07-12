@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
+	"syscall"
 	"time"
 )
 
@@ -22,6 +23,7 @@ type Runner interface {
 	Kill() error
 	Errors() chan error
 	Exited() bool
+	ExitStatus(err error) int
 }
 
 type runner struct {
@@ -109,6 +111,18 @@ func (r *runner) Exited() bool {
 // Errors get errors occurred during the build
 func (r *runner) Errors() chan error {
 	return r.errors
+}
+
+// ExitStatus resolves the exit status
+func (r *runner) ExitStatus(err error) int {
+	var exitStatus int
+	if exiterr, ok := err.(*exec.ExitError); ok {
+		if status, oks := exiterr.Sys().(syscall.WaitStatus); oks {
+			exitStatus = status.ExitStatus()
+		}
+	}
+
+	return exitStatus
 }
 
 func (r *runner) runBin() error {

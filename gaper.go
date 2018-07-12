@@ -5,7 +5,6 @@ package gaper
 import (
 	"fmt"
 	"os"
-	"os/exec"
 	"os/signal"
 	"path/filepath"
 	"syscall"
@@ -22,6 +21,13 @@ var DefaultExtensions = []string{"go"}
 
 // DefaultPoolInterval is the time in ms used by the watcher to wait between scans
 var DefaultPoolInterval = 500
+
+// No restart types
+var (
+	NoRestartOnError   = "error"
+	NoRestartOnSuccess = "success"
+	NoRestartOnExit    = "exit"
+)
 
 var logger = NewLogger("gaper")
 
@@ -43,56 +49,38 @@ type Config struct {
 	Extensions        []string
 	NoRestartOn       string
 	Verbose           bool
-	ExitOnSIGINT      bool
+	WorkingDirectory  string
 }
 
-// Run in the gaper high level API
-// It starts the whole gaper process watching for file changes or exit codes
+// Run starts the whole gaper process watching for file changes or exit codes
 // and restarting the program
-func Run(cfg *Config) error { // nolint: gocyclo
-	var err error
-	logger.Verbose(cfg.Verbose)
+func Run(cfg *Config, chOSSiginal chan os.Signal) error {
 	logger.Debug("Starting gaper")
 
-	if len(cfg.BuildPath) == 0 {
-		cfg.BuildPath = DefaultBuildPath
-	}
-
-	cfg.BuildArgs, err = parseInnerArgs(cfg.BuildArgs, cfg.BuildArgsMerged)
-	if err != nil {
+	if err := setupConfig(cfg); err != nil {
 		return err
 	}
 
-	cfg.ProgramArgs, err = parseInnerArgs(cfg.ProgramArgs, cfg.ProgramArgsMerged)
-	if err != nil {
-		return err
-	}
-
-	wd, err := os.Getwd()
-	if err != nil {
-		return err
-	}
-
-	if len(cfg.WatchItems) == 0 {
-		cfg.WatchItems = append(cfg.WatchItems, cfg.BuildPath)
-	}
-
-	builder := NewBuilder(cfg.BuildPath, cfg.BinName, wd, cfg.BuildArgs)
-	runner := NewRunner(os.Stdout, os.Stderr, filepath.Join(wd, builder.Binary()), cfg.ProgramArgs)
-
-	if err = builder.Build(); err != nil {
-		return fmt.Errorf("build error: %v", err)
-	}
-
-	shutdown(runner, cfg.ExitOnSIGINT)
-
-	if _, err = runner.Run(); err != nil {
-		return fmt.Errorf("run error: %v", err)
-	}
-
+	builder := NewBuilder(cfg.BuildPath, cfg.BinName, cfg.WorkingDirectory, cfg.BuildArgs)
+	runner := NewRunner(os.Stdout, os.Stderr, filepath.Join(cfg.WorkingDirectory, builder.Binary()), cfg.ProgramArgs)
 	watcher, err := NewWatcher(cfg.PollInterval, cfg.WatchItems, cfg.IgnoreItems, cfg.Extensions)
 	if err != nil {
 		return fmt.Errorf("watcher error: %v", err)
+	}
+
+	return run(cfg, chOSSiginal, builder, runner, watcher)
+}
+
+func run(cfg *Config, chOSSiginal chan os.Signal, builder Builder, runner Runner, watcher Watcher) error { // nolint: gocyclo
+	if err := builder.Build(); err != nil {
+		return fmt.Errorf("build error: %v", err)
+	}
+
+	// listen for OS signals
+	signal.Notify(chOSSiginal, os.Interrupt, syscall.SIGTERM)
+
+	if _, err := runner.Run(); err != nil {
+		return fmt.Errorf("run error: %v", err)
 	}
 
 	// flag to know if an exit was caused by a restart from a file changing
@@ -101,13 +89,13 @@ func Run(cfg *Config) error { // nolint: gocyclo
 	go watcher.Watch()
 	for {
 		select {
-		case event := <-watcher.Events:
+		case event := <-watcher.Events():
 			logger.Debug("Detected new changed file: ", event)
 			changeRestart = true
 			if err := restart(builder, runner); err != nil {
 				return err
 			}
-		case err := <-watcher.Errors:
+		case err := <-watcher.Errors():
 			return fmt.Errorf("error on watching files: %v", err)
 		case err := <-runner.Errors():
 			logger.Debug("Detected program exit: ", err)
@@ -121,6 +109,14 @@ func Run(cfg *Config) error { // nolint: gocyclo
 			if err = handleProgramExit(builder, runner, err, cfg.NoRestartOn); err != nil {
 				return err
 			}
+		case signal := <-chOSSiginal:
+			logger.Debug("Got signal: ", signal)
+
+			if err := runner.Kill(); err != nil {
+				logger.Error("Error killing: ", err)
+			}
+
+			return fmt.Errorf("OS signal: %v", signal)
 		default:
 			time.Sleep(time.Duration(cfg.PollInterval) * time.Millisecond)
 		}
@@ -149,49 +145,53 @@ func restart(builder Builder, runner Runner) error {
 }
 
 func handleProgramExit(builder Builder, runner Runner, err error, noRestartOn string) error {
-	var exitStatus int
-	if exiterr, ok := err.(*exec.ExitError); ok {
-		status, oks := exiterr.Sys().(syscall.WaitStatus)
-		if !oks {
-			return fmt.Errorf("couldn't resolve exit status: %v", err)
-		}
-
-		exitStatus = status.ExitStatus()
-	}
+	exitStatus := runner.ExitStatus(err)
 
 	// if "error", an exit code of 0 will still restart.
-	if noRestartOn == "error" && exitStatus == exitStatusError {
+	if noRestartOn == NoRestartOnError && exitStatus == exitStatusError {
 		return nil
 	}
 
 	// if "success", no restart only if exit code is 0.
-	if noRestartOn == "success" && exitStatus == exitStatusSuccess {
+	if noRestartOn == NoRestartOnSuccess && exitStatus == exitStatusSuccess {
 		return nil
 	}
 
 	// if "exit", no restart regardless of exit code.
-	if noRestartOn == "exit" {
+	if noRestartOn == NoRestartOnExit {
 		return nil
 	}
 
 	return restart(builder, runner)
 }
 
-func shutdown(runner Runner, exitOnSIGINT bool) {
-	c := make(chan os.Signal, 2)
-	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
-	go func() {
-		s := <-c
-		logger.Debug("Got signal: ", s)
+func setupConfig(cfg *Config) error {
+	var err error
 
-		if err := runner.Kill(); err != nil {
-			logger.Error("Error killing: ", err)
-		}
+	if len(cfg.BuildPath) == 0 {
+		cfg.BuildPath = DefaultBuildPath
+	}
 
-		if exitOnSIGINT {
-			os.Exit(0)
-		}
-	}()
+	cfg.BuildArgs, err = parseInnerArgs(cfg.BuildArgs, cfg.BuildArgsMerged)
+	if err != nil {
+		return err
+	}
+
+	cfg.ProgramArgs, err = parseInnerArgs(cfg.ProgramArgs, cfg.ProgramArgsMerged)
+	if err != nil {
+		return err
+	}
+
+	cfg.WorkingDirectory, err = os.Getwd()
+	if err != nil {
+		return err
+	}
+
+	if len(cfg.WatchItems) == 0 {
+		cfg.WatchItems = append(cfg.WatchItems, cfg.BuildPath)
+	}
+
+	return nil
 }
 
 func parseInnerArgs(args []string, argsm string) ([]string, error) {

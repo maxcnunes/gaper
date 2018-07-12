@@ -16,18 +16,19 @@ func TestWatcherDefaultValues(t *testing.T) {
 	var ignoreItems []string
 	var extensions []string
 
-	w, err := NewWatcher(pollInterval, watchItems, ignoreItems, extensions)
+	wt, err := NewWatcher(pollInterval, watchItems, ignoreItems, extensions)
 
 	expectedPath := "testdata/server"
 	if runtime.GOOS == OSWindows {
 		expectedPath = "testdata\\server"
 	}
 
+	w := wt.(*watcher)
 	assert.Nil(t, err, "wacher error")
-	assert.Equal(t, 500, w.PollInterval)
-	assert.Equal(t, map[string]bool{expectedPath: true}, w.WatchItems)
-	assert.Len(t, w.IgnoreItems, 0)
-	assert.Equal(t, map[string]bool{".go": true}, w.AllowedExtensions)
+	assert.Equal(t, 500, w.pollInterval)
+	assert.Equal(t, map[string]bool{expectedPath: true}, w.watchItems)
+	assert.Len(t, w.ignoreItems, 0)
+	assert.Equal(t, map[string]bool{".go": true}, w.allowedExtensions)
 }
 
 func TestWatcherGlobPath(t *testing.T) {
@@ -36,9 +37,10 @@ func TestWatcherGlobPath(t *testing.T) {
 	ignoreItems := []string{"./testdata/**/*_test.go"}
 	var extensions []string
 
-	w, err := NewWatcher(pollInterval, watchItems, ignoreItems, extensions)
+	wt, err := NewWatcher(pollInterval, watchItems, ignoreItems, extensions)
 	assert.Nil(t, err, "wacher error")
-	assert.Equal(t, map[string]bool{"testdata/server/main_test.go": true}, w.IgnoreItems)
+	w := wt.(*watcher)
+	assert.Equal(t, map[string]bool{"testdata/server/main_test.go": true}, w.ignoreItems)
 }
 
 func TestWatcherRemoveOverlapdPaths(t *testing.T) {
@@ -47,9 +49,10 @@ func TestWatcherRemoveOverlapdPaths(t *testing.T) {
 	ignoreItems := []string{"./testdata/**/*", "./testdata/server"}
 	var extensions []string
 
-	w, err := NewWatcher(pollInterval, watchItems, ignoreItems, extensions)
+	wt, err := NewWatcher(pollInterval, watchItems, ignoreItems, extensions)
 	assert.Nil(t, err, "wacher error")
-	assert.Equal(t, map[string]bool{"./testdata/server": true}, w.IgnoreItems)
+	w := wt.(*watcher)
+	assert.Equal(t, map[string]bool{"./testdata/server": true}, w.ignoreItems)
 }
 
 func TestWatcherWatchChange(t *testing.T) {
@@ -83,9 +86,9 @@ func TestWatcherWatchChange(t *testing.T) {
 	os.Chtimes(mainfile, time.Now(), time.Now())
 
 	select {
-	case event := <-w.Events:
+	case event := <-w.Events():
 		assert.Equal(t, mainfile, event)
-	case err := <-w.Errors:
+	case err := <-w.Errors():
 		assert.Nil(t, err, "wacher event error")
 	}
 }

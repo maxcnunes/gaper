@@ -1,6 +1,6 @@
 OS		:= $(shell uname -s)
-TEST_PACKAGES	:= $(shell go list ./...)
-COVER_PACKAGES	:= $(shell go list ./... | paste -sd "," -)
+TEST_PACKAGES	:= $(shell go list ./... | grep -v cmd)
+COVER_PACKAGES	:= $(shell go list ./... | grep -v cmd | paste -sd "," -)
 LINTER		:= $(shell command -v gometalinter 2> /dev/null)
 
 .PHONY: setup
