@@ -71,7 +71,8 @@ func Run(cfg *Config, chOSSiginal chan os.Signal) error {
 	return run(cfg, chOSSiginal, builder, runner, watcher)
 }
 
-func run(cfg *Config, chOSSiginal chan os.Signal, builder Builder, runner Runner, watcher Watcher) error { // nolint: gocyclo
+// nolint: gocyclo
+func run(cfg *Config, chOSSiginal chan os.Signal, builder Builder, runner Runner, watcher Watcher) error {
 	if err := builder.Build(); err != nil {
 		return fmt.Errorf("build error: %v", err)
 	}

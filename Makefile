@@ -27,6 +27,7 @@ lint:
 		--deadline=120s \
 		--line-length=120 \
 		--enable-all \
+		--disable=gochecknoinits --disable=gochecknoglobals \
 		--vendor ./...
 
 test:

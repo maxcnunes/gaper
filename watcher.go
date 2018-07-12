@@ -89,7 +89,7 @@ func (w *watcher) Watch() {
 }
 
 // Events get events occurred during the watching
-// these events are emited only a file changing is detected
+// these events are emitted only a file changing is detected
 func (w *watcher) Events() chan string {
 	return w.events
 }
