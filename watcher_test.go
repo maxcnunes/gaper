@@ -16,7 +16,14 @@ func TestWatcherDefaultValues(t *testing.T) {
 	var ignoreItems []string
 	var extensions []string
 
-	wt, err := NewWatcher(pollInterval, watchItems, ignoreItems, extensions)
+	wCfg := WatcherConfig{
+		DefaultIgnore: true,
+		PollInterval:  pollInterval,
+		WatchItems:    watchItems,
+		IgnoreItems:   ignoreItems,
+		Extensions:    extensions,
+	}
+	wt, err := NewWatcher(wCfg)
 
 	expectedPath := "testdata/server"
 	if runtime.GOOS == OSWindows {
@@ -37,7 +44,14 @@ func TestWatcherGlobPath(t *testing.T) {
 	ignoreItems := []string{"./testdata/**/*_test.go"}
 	var extensions []string
 
-	wt, err := NewWatcher(pollInterval, watchItems, ignoreItems, extensions)
+	wCfg := WatcherConfig{
+		DefaultIgnore: true,
+		PollInterval:  pollInterval,
+		WatchItems:    watchItems,
+		IgnoreItems:   ignoreItems,
+		Extensions:    extensions,
+	}
+	wt, err := NewWatcher(wCfg)
 	assert.Nil(t, err, "wacher error")
 	w := wt.(*watcher)
 	assert.Equal(t, map[string]bool{"testdata/server/main_test.go": true}, w.ignoreItems)
@@ -49,7 +63,14 @@ func TestWatcherRemoveOverlapdPaths(t *testing.T) {
 	ignoreItems := []string{"./testdata/**/*", "./testdata/server"}
 	var extensions []string
 
-	wt, err := NewWatcher(pollInterval, watchItems, ignoreItems, extensions)
+	wCfg := WatcherConfig{
+		DefaultIgnore: true,
+		PollInterval:  pollInterval,
+		WatchItems:    watchItems,
+		IgnoreItems:   ignoreItems,
+		Extensions:    extensions,
+	}
+	wt, err := NewWatcher(wCfg)
 	assert.Nil(t, err, "wacher error")
 	w := wt.(*watcher)
 	assert.Equal(t, map[string]bool{"./testdata/server": true}, w.ignoreItems)
@@ -69,7 +90,14 @@ func TestWatcherWatchChange(t *testing.T) {
 	ignoreItems := []string{testfile}
 	extensions := []string{"go"}
 
-	w, err := NewWatcher(pollInterval, watchItems, ignoreItems, extensions)
+	wCfg := WatcherConfig{
+		DefaultIgnore: true,
+		PollInterval:  pollInterval,
+		WatchItems:    watchItems,
+		IgnoreItems:   ignoreItems,
+		Extensions:    extensions,
+	}
+	w, err := NewWatcher(wCfg)
 	assert.Nil(t, err, "wacher error")
 
 	go w.Watch()

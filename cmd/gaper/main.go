@@ -17,16 +17,17 @@ var logger = gaper.NewLogger("gaper")
 func main() {
 	parseArgs := func(c *cli.Context) *gaper.Config {
 		return &gaper.Config{
-			BinName:           c.String("bin-name"),
-			BuildPath:         c.String("build-path"),
-			BuildArgsMerged:   c.String("build-args"),
-			ProgramArgsMerged: c.String("program-args"),
-			Verbose:           c.Bool("verbose"),
-			WatchItems:        c.StringSlice("watch"),
-			IgnoreItems:       c.StringSlice("ignore"),
-			PollInterval:      c.Int("poll-interval"),
-			Extensions:        c.StringSlice("extensions"),
-			NoRestartOn:       c.String("no-restart-on"),
+			BinName:              c.String("bin-name"),
+			BuildPath:            c.String("build-path"),
+			BuildArgsMerged:      c.String("build-args"),
+			ProgramArgsMerged:    c.String("program-args"),
+			Verbose:              c.Bool("verbose"),
+			DisableDefaultIgnore: c.Bool("disable-default-ignore"),
+			WatchItems:           c.StringSlice("watch"),
+			IgnoreItems:          c.StringSlice("ignore"),
+			PollInterval:         c.Int("poll-interval"),
+			Extensions:           c.StringSlice("extensions"),
+			NoRestartOn:          c.String("no-restart-on"),
 		}
 	}
 
@@ -73,6 +74,10 @@ func main() {
 		cli.BoolFlag{
 			Name:  "verbose",
 			Usage: "turns on the verbose messages from gaper",
+		},
+		cli.BoolFlag{
+			Name:  "disable-default-ignore",
+			Usage: "turns off default ignore for hidden files and folders, \"*_test.go\" files, and vendor folder",
 		},
 		cli.StringSliceFlag{
 			Name:  "watch, w",

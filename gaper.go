@@ -37,19 +37,20 @@ var exitStatusError = 1
 
 // Config contains all settings supported by gaper
 type Config struct {
-	BinName           string
-	BuildPath         string
-	BuildArgs         []string
-	BuildArgsMerged   string
-	ProgramArgs       []string
-	ProgramArgsMerged string
-	WatchItems        []string
-	IgnoreItems       []string
-	PollInterval      int
-	Extensions        []string
-	NoRestartOn       string
-	Verbose           bool
-	WorkingDirectory  string
+	BinName              string
+	BuildPath            string
+	BuildArgs            []string
+	BuildArgsMerged      string
+	ProgramArgs          []string
+	ProgramArgsMerged    string
+	WatchItems           []string
+	IgnoreItems          []string
+	PollInterval         int
+	Extensions           []string
+	NoRestartOn          string
+	Verbose              bool
+	DisableDefaultIgnore bool
+	WorkingDirectory     string
 }
 
 // Run starts the whole gaper process watching for file changes or exit codes
@@ -61,9 +62,17 @@ func Run(cfg *Config, chOSSiginal chan os.Signal) error {
 		return err
 	}
 
+	wCfg := WatcherConfig{
+		DefaultIgnore: !cfg.DisableDefaultIgnore,
+		PollInterval:  cfg.PollInterval,
+		WatchItems:    cfg.WatchItems,
+		IgnoreItems:   cfg.IgnoreItems,
+		Extensions:    cfg.Extensions,
+	}
+
 	builder := NewBuilder(cfg.BuildPath, cfg.BinName, cfg.WorkingDirectory, cfg.BuildArgs)
 	runner := NewRunner(os.Stdout, os.Stderr, filepath.Join(cfg.WorkingDirectory, builder.Binary()), cfg.ProgramArgs)
-	watcher, err := NewWatcher(cfg.PollInterval, cfg.WatchItems, cfg.IgnoreItems, cfg.Extensions)
+	watcher, err := NewWatcher(wCfg)
 	if err != nil {
 		return fmt.Errorf("watcher error: %v", err)
 	}

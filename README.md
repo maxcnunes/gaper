@@ -49,9 +49,9 @@ GLOBAL OPTIONS:
    --build-args value               arguments used on building the program
    --program-args value             arguments used on executing the program
    --verbose                        turns on the verbose messages from gaper
+   --disable-default-ignore         turns off default ignore for hidden files and folders, "*_test.go" files, and vendor folder
    --watch value, -w value          list of folders or files to watch for changes
    --ignore value, -i value         list of folders or files to ignore for changes
-                                      (always ignores all hidden files and directories)
    --poll-interval value, -p value  how often in milliseconds to poll watched files for changes (default: 500)
    --extensions value, -e value     a comma-delimited list of file extensions to watch for changes (default: "go")
    --no-restart-on value, -n value  don't automatically restart the supervised program if it ends:
@@ -62,9 +62,25 @@ GLOBAL OPTIONS:
    --version, -v                    print the version
 ```
 
+Since in most projects there is no need to watch changes of:
+
+* hidden files and folders
+* test files (`*_test.go`)
+* vendor folder
+
+Gaper by default ignores those cases already. Although, if you need Gaper to watch those files anyway it is possible to disable this setting with `--disable-default-ignore` argument.
+
 ### Examples
 
+Using all defaults provided by Gaper:
+
+```
+gaper
+```
+
 Ignore watch over all test files:
+
+> no need for this in case you are not using `--disable-default-ignore`
 
 ```
 --ignore './**/*_test.go'

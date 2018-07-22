@@ -20,6 +20,7 @@ type Watcher interface {
 
 // watcher is a interface for the watch process
 type watcher struct {
+	defaultIgnore     bool
 	pollInterval      int
 	watchItems        map[string]bool
 	ignoreItems       map[string]bool
@@ -28,27 +29,36 @@ type watcher struct {
 	errors            chan error
 }
 
+// WatcherConfig defines the settings available for the watcher
+type WatcherConfig struct {
+	DefaultIgnore bool
+	PollInterval  int
+	WatchItems    []string
+	IgnoreItems   []string
+	Extensions    []string
+}
+
 // NewWatcher creates a new watcher
-func NewWatcher(pollInterval int, watchItems []string, ignoreItems []string, extensions []string) (Watcher, error) {
-	if pollInterval == 0 {
-		pollInterval = DefaultPoolInterval
+func NewWatcher(cfg WatcherConfig) (Watcher, error) {
+	if cfg.PollInterval == 0 {
+		cfg.PollInterval = DefaultPoolInterval
 	}
 
-	if len(extensions) == 0 {
-		extensions = DefaultExtensions
+	if len(cfg.Extensions) == 0 {
+		cfg.Extensions = DefaultExtensions
 	}
 
 	allowedExts := make(map[string]bool)
-	for _, ext := range extensions {
+	for _, ext := range cfg.Extensions {
 		allowedExts["."+ext] = true
 	}
 
-	watchPaths, err := resolvePaths(watchItems, allowedExts)
+	watchPaths, err := resolvePaths(cfg.WatchItems, allowedExts)
 	if err != nil {
 		return nil, err
 	}
 
-	ignorePaths, err := resolvePaths(ignoreItems, allowedExts)
+	ignorePaths, err := resolvePaths(cfg.IgnoreItems, allowedExts)
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +68,8 @@ func NewWatcher(pollInterval int, watchItems []string, ignoreItems []string, ext
 	return &watcher{
 		events:            make(chan string),
 		errors:            make(chan error),
-		pollInterval:      pollInterval,
+		defaultIgnore:     cfg.DefaultIgnore,
+		pollInterval:      cfg.PollInterval,
 		watchItems:        watchPaths,
 		ignoreItems:       ignorePaths,
 		allowedExtensions: allowedExts,
@@ -105,12 +116,7 @@ func (w *watcher) scanChange(watchPath string) (string, error) {
 	var fileChanged string
 
 	err := filepath.Walk(watchPath, func(path string, info os.FileInfo, err error) error {
-		// always ignore hidden files and directories
-		if dir := filepath.Base(path); dir[0] == '.' && dir != "." {
-			return skipFile(info)
-		}
-
-		if _, ignored := w.ignoreItems[path]; ignored {
+		if w.ignoreFile(path, info) {
 			return skipFile(info)
 		}
 
@@ -128,6 +134,31 @@ func (w *watcher) scanChange(watchPath string) (string, error) {
 	}
 
 	return fileChanged, nil
+}
+
+func (w *watcher) ignoreFile(path string, info os.FileInfo) bool {
+	// check if preset ignore is enabled
+	if w.defaultIgnore {
+		// check for hidden files and directories
+		if name := info.Name(); name[0] == '.' && name != "." {
+			return true
+		}
+
+		// check if it is a Go testing file
+		if strings.HasSuffix(path, "_test.go") {
+			return true
+		}
+
+		// check if it is the vendor folder
+		if info.IsDir() && info.Name() == "vendor" {
+			return true
+		}
+	}
+
+	if _, ignored := w.ignoreItems[path]; ignored {
+		return true
+	}
+	return false
 }
 
 func resolvePaths(paths []string, extensions map[string]bool) (map[string]bool, error) {
