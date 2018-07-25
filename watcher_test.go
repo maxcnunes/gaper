@@ -1,6 +1,7 @@
 package gaper
 
 import (
+	"log"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -60,7 +61,7 @@ func TestWatcherGlobPath(t *testing.T) {
 func TestWatcherRemoveOverlapdPaths(t *testing.T) {
 	pollInterval := 0
 	watchItems := []string{filepath.Join("testdata", "server")}
-	ignoreItems := []string{"./testdata/**/*", "./testdata/server"}
+	ignoreItems := []string{"./testdata/server/**/*", "./testdata/server"}
 	var extensions []string
 
 	wCfg := WatcherConfig{
@@ -118,5 +119,134 @@ func TestWatcherWatchChange(t *testing.T) {
 		assert.Equal(t, mainfile, event)
 	case err := <-w.Errors():
 		assert.Nil(t, err, "wacher event error")
+	}
+}
+
+func TestWatcherIgnoreFile(t *testing.T) {
+	testCases := []struct {
+		name, file, ignoreFile      string
+		defaultIgnore, expectIgnore bool
+	}{
+		{
+			name:          "with default ignore enabled it ignores vendor folder",
+			file:          "vendor",
+			defaultIgnore: true,
+			expectIgnore:  true,
+		},
+		{
+			name:          "without default ignore enabled it does not ignore vendor folder",
+			file:          "vendor",
+			defaultIgnore: false,
+			expectIgnore:  false,
+		},
+		{
+			name:          "with default ignore enabled it ignores test file",
+			file:          filepath.Join("testdata", "server", "main_test.go"),
+			defaultIgnore: true,
+			expectIgnore:  true,
+		},
+		{
+			name:          "with default ignore enabled it does no ignore non test files which have test in the name",
+			file:          filepath.Join("testdata", "ignore-test-name.txt"),
+			defaultIgnore: true,
+			expectIgnore:  false,
+		},
+		{
+			name:          "without default ignore enabled it does not ignore test file",
+			file:          filepath.Join("testdata", "server", "main_test.go"),
+			defaultIgnore: false,
+			expectIgnore:  false,
+		},
+		{
+			name:          "with default ignore enabled it ignores ignored items",
+			file:          filepath.Join("testdata", "server", "main.go"),
+			ignoreFile:    filepath.Join("testdata", "server", "main.go"),
+			defaultIgnore: true,
+			expectIgnore:  true,
+		},
+		{
+			name:          "without default ignore enabled it ignores ignored items",
+			file:          filepath.Join("testdata", "server", "main.go"),
+			ignoreFile:    filepath.Join("testdata", "server", "main.go"),
+			defaultIgnore: false,
+			expectIgnore:  true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			srvdir := "."
+
+			watchItems := []string{srvdir}
+			ignoreItems := []string{}
+			if len(tc.ignoreFile) > 0 {
+				ignoreItems = append(ignoreItems, tc.ignoreFile)
+			}
+			extensions := []string{"go"}
+
+			wCfg := WatcherConfig{
+				DefaultIgnore: tc.defaultIgnore,
+				WatchItems:    watchItems,
+				IgnoreItems:   ignoreItems,
+				Extensions:    extensions,
+			}
+			w, err := NewWatcher(wCfg)
+			assert.Nil(t, err, "wacher error")
+
+			wt := w.(*watcher)
+
+			filePath := tc.file
+			file, err := os.Open(filePath)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			fileInfo, err := file.Stat()
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			assert.Equal(t, tc.expectIgnore, wt.ignoreFile(filePath, fileInfo))
+		})
+	}
+}
+
+func TestWatcherResolvePaths(t *testing.T) {
+	testCases := []struct {
+		name                    string
+		paths                   []string
+		extensions, expectPaths map[string]bool
+		err                     error
+	}{
+		{
+			name:        "remove duplicated paths",
+			paths:       []string{"testdata/test-duplicated-paths", "testdata/test-duplicated-paths"},
+			extensions:  map[string]bool{".txt": true},
+			expectPaths: map[string]bool{"testdata/test-duplicated-paths": true},
+		},
+		{
+			name:        "remove duplicated paths from glob",
+			paths:       []string{"testdata/test-duplicated-paths", "testdata/test-duplicated-paths/**/*"},
+			extensions:  map[string]bool{".txt": true},
+			expectPaths: map[string]bool{"testdata/test-duplicated-paths": true},
+		},
+		{
+			name:        "remove duplicated paths from glob with inverse order",
+			paths:       []string{"testdata/test-duplicated-paths/**/*", "testdata/test-duplicated-paths"},
+			extensions:  map[string]bool{".txt": true},
+			expectPaths: map[string]bool{"testdata/test-duplicated-paths": true},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			paths, err := resolvePaths(tc.paths, tc.extensions)
+			if tc.err == nil {
+				assert.Nil(t, err, "resolve path error")
+				assert.Equal(t, tc.expectPaths, paths)
+			} else {
+				assert.Equal(t, tc.err, err)
+			}
+		})
 	}
 }

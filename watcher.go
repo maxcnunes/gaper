@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -158,6 +159,7 @@ func (w *watcher) ignoreFile(path string, info os.FileInfo) bool {
 	if _, ignored := w.ignoreItems[path]; ignored {
 		return true
 	}
+
 	return false
 }
 
@@ -180,7 +182,7 @@ func resolvePaths(paths []string, extensions map[string]bool) (map[string]bool, 
 			// don't care for extension filter right now for non glob paths
 			// since they could be a directory
 			if isGlob {
-				if _, ok := extensions[filepath.Ext(path)]; !ok {
+				if _, ok := extensions[filepath.Ext(match)]; !ok {
 					continue
 				}
 			}
@@ -198,13 +200,19 @@ func resolvePaths(paths []string, extensions map[string]bool) (map[string]bool, 
 
 // remove overlapped paths so it makes the scan for changes later faster and simpler
 func removeOverlappedPaths(mapPaths map[string]bool) {
+	startDot := regexp.MustCompile(`^\./`)
+
 	for p1 := range mapPaths {
+		p1 = startDot.ReplaceAllString(p1, "")
+
 		// skip to next item if this path has already been checked
 		if v, ok := mapPaths[p1]; ok && !v {
 			continue
 		}
 
 		for p2 := range mapPaths {
+			p2 = startDot.ReplaceAllString(p2, "")
+
 			if p1 == p2 {
 				continue
 			}
