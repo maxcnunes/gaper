@@ -31,8 +31,12 @@ type MockRunner struct {
 // Run ...
 func (m *MockRunner) Run() (*exec.Cmd, error) {
 	args := m.Called()
-	return args.Get(0).(*exec.Cmd), args.Error(1)
+	cmdArg := args.Get(0)
+	if cmdArg == nil {
+		return nil, args.Error(1)
+	}
 
+	return cmdArg.(*exec.Cmd), args.Error(1)
 }
 
 // Kill ...

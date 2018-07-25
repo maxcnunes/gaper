@@ -39,6 +39,35 @@ func TestGaperSetupConfigNoParams(t *testing.T) {
 	assert.Equal(t, args.WatchItems, []string{"."})
 }
 
+func TestGaperBuildError(t *testing.T) {
+	mockBuilder := new(testdata.MockBuilder)
+	mockBuilder.On("Build").Return(errors.New("build-error"))
+	mockRunner := new(testdata.MockRunner)
+	mockWatcher := new(testdata.MockWacther)
+
+	cfg := &Config{}
+
+	chOSSiginal := make(chan os.Signal, 2)
+	err := run(cfg, chOSSiginal, mockBuilder, mockRunner, mockWatcher)
+	assert.NotNil(t, err, "build error")
+	assert.Equal(t, "build error: build-error", err.Error())
+}
+
+func TestGaperRunError(t *testing.T) {
+	mockBuilder := new(testdata.MockBuilder)
+	mockBuilder.On("Build").Return(nil)
+	mockRunner := new(testdata.MockRunner)
+	mockRunner.On("Run").Return(nil, errors.New("runner-error"))
+	mockWatcher := new(testdata.MockWacther)
+
+	cfg := &Config{}
+
+	chOSSiginal := make(chan os.Signal, 2)
+	err := run(cfg, chOSSiginal, mockBuilder, mockRunner, mockWatcher)
+	assert.NotNil(t, err, "runner error")
+	assert.Equal(t, "run error: runner-error", err.Error())
+}
+
 func TestGaperWatcherError(t *testing.T) {
 	mockBuilder := new(testdata.MockBuilder)
 	mockBuilder.On("Build").Return(nil)
