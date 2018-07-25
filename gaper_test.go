@@ -268,3 +268,25 @@ func TestGaperRestartRunFail(t *testing.T) {
 	mockBuilder.AssertExpectations(t)
 	mockRunner.AssertExpectations(t)
 }
+
+func TestGaperFailBadBuildArgsMerged(t *testing.T) {
+	args := &Config{
+		BuildArgsMerged: "foo '",
+	}
+	chOSSiginal := make(chan os.Signal, 2)
+
+	err := Run(args, chOSSiginal)
+	assert.NotNil(t, err, "run error")
+	assert.Equal(t, "invalid command line string", err.Error())
+}
+
+func TestGaperFailBadProgramArgsMerged(t *testing.T) {
+	args := &Config{
+		ProgramArgsMerged: "foo '",
+	}
+	chOSSiginal := make(chan os.Signal, 2)
+
+	err := Run(args, chOSSiginal)
+	assert.NotNil(t, err, "run error")
+	assert.Equal(t, "invalid command line string", err.Error())
+}
