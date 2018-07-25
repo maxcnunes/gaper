@@ -269,7 +269,7 @@ func TestGaperRestartRunFail(t *testing.T) {
 	mockRunner.AssertExpectations(t)
 }
 
-func TestGaperFailBadBuildArgsMerged(t *testing.T) {
+func TestGaperFailBadBuildArgsMerged(t *testing.T) { // nolint: dupl
 	args := &Config{
 		BuildArgsMerged: "foo '",
 	}
@@ -280,7 +280,7 @@ func TestGaperFailBadBuildArgsMerged(t *testing.T) {
 	assert.Equal(t, "invalid command line string", err.Error())
 }
 
-func TestGaperFailBadProgramArgsMerged(t *testing.T) {
+func TestGaperFailBadProgramArgsMerged(t *testing.T) { // nolint: dupl
 	args := &Config{
 		ProgramArgsMerged: "foo '",
 	}
