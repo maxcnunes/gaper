@@ -144,11 +144,13 @@ func restart(builder Builder, runner Runner) error {
 	}
 
 	if err := builder.Build(); err != nil {
-		return fmt.Errorf("build error: %v", err)
+		logger.Error("Error building binary during a restart: ", err)
+		return nil
 	}
 
 	if _, err := runner.Run(); err != nil {
-		return fmt.Errorf("run error: %v", err)
+		logger.Error("Error starting process during a restart: ", err)
+		return nil
 	}
 
 	return nil

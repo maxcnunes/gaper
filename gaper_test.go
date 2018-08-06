@@ -247,8 +247,7 @@ func TestGaperRestartBuildFail(t *testing.T) {
 	mockRunner.On("Exited").Return(true)
 
 	err := restart(mockBuilder, mockRunner)
-	assert.NotNil(t, err, "restart error")
-	assert.Equal(t, "build error: build-error", err.Error())
+	assert.Nil(t, err, "restart error")
 	mockBuilder.AssertExpectations(t)
 	mockRunner.AssertExpectations(t)
 }
@@ -263,8 +262,7 @@ func TestGaperRestartRunFail(t *testing.T) {
 	mockRunner.On("Exited").Return(true)
 
 	err := restart(mockBuilder, mockRunner)
-	assert.NotNil(t, err, "restart error")
-	assert.Equal(t, "run error: run-error", err.Error())
+	assert.Nil(t, err, "restart error")
 	mockBuilder.AssertExpectations(t)
 	mockRunner.AssertExpectations(t)
 }
