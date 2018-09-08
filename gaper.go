@@ -100,7 +100,7 @@ func run(cfg *Config, chOSSiginal chan os.Signal, builder Builder, runner Runner
 	for {
 		select {
 		case event := <-watcher.Events():
-			logger.Debug("Detected new changed file: ", event)
+			logger.Debug("Detected new changed file:", event)
 			changeRestart = true
 			if err := restart(builder, runner); err != nil {
 				return err
@@ -108,7 +108,7 @@ func run(cfg *Config, chOSSiginal chan os.Signal, builder Builder, runner Runner
 		case err := <-watcher.Errors():
 			return fmt.Errorf("error on watching files: %v", err)
 		case err := <-runner.Errors():
-			logger.Debug("Detected program exit: ", err)
+			logger.Debug("Detected program exit:", err)
 
 			// ignore exit by change
 			if changeRestart {
@@ -120,10 +120,10 @@ func run(cfg *Config, chOSSiginal chan os.Signal, builder Builder, runner Runner
 				return err
 			}
 		case signal := <-chOSSiginal:
-			logger.Debug("Got signal: ", signal)
+			logger.Debug("Got signal:", signal)
 
 			if err := runner.Kill(); err != nil {
-				logger.Error("Error killing: ", err)
+				logger.Error("Error killing:", err)
 			}
 
 			return fmt.Errorf("OS signal: %v", signal)
@@ -144,12 +144,12 @@ func restart(builder Builder, runner Runner) error {
 	}
 
 	if err := builder.Build(); err != nil {
-		logger.Error("Error building binary during a restart: ", err)
+		logger.Error("Error building binary during a restart:", err)
 		return nil
 	}
 
 	if _, err := runner.Run(); err != nil {
-		logger.Error("Error starting process during a restart: ", err)
+		logger.Error("Error starting process during a restart:", err)
 		return nil
 	}
 
