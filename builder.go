@@ -56,7 +56,7 @@ func (b *builder) Build() error {
 
 	output, err := command.CombinedOutput()
 	if err != nil {
-		return err
+		return fmt.Errorf("build failed with %v\n%s", err, output)
 	}
 
 	if !command.ProcessState.Success() {
