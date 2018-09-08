@@ -138,6 +138,12 @@ func (w *watcher) scanChange(watchPath string) (string, error) {
 }
 
 func (w *watcher) ignoreFile(path string, info os.FileInfo) bool {
+	// if a file has been deleted after gaper was watching it
+	// info will be nil in the other iterations
+	if info == nil {
+		return true
+	}
+
 	// check if preset ignore is enabled
 	if w.defaultIgnore {
 		// check for hidden files and directories
