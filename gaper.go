@@ -98,6 +98,11 @@ func run(cfg *Config, chOSSiginal chan os.Signal, builder Builder, runner Runner
 		select {
 		case event := <-watcher.Events():
 			logger.Debug("Detected new changed file:", event)
+			if changeRestart {
+				logger.Debug("Skip restart due to existing on going restart")
+				continue
+			}
+
 			changeRestart = true
 			if err := restart(builder, runner); err != nil {
 				return err
