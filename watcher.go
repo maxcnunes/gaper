@@ -117,6 +117,10 @@ func (w *watcher) scanChange(watchPath string) (string, error) {
 	var fileChanged string
 
 	err := filepath.Walk(watchPath, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return fmt.Errorf("couldn't walk to path \"%s\": %v", path, err)
+		}
+
 		if w.ignoreFile(path, info) {
 			return skipFile(info)
 		}
