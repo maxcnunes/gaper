@@ -15,16 +15,18 @@ var (
 	version = "1.0.1-dev"
 )
 
-var logger = gaper.NewLogger("gaper")
-
 func main() {
+	logger := gaper.Logger()
+	loggerVerbose := false
+
 	parseArgs := func(c *cli.Context) *gaper.Config {
+		loggerVerbose = c.Bool("verbose")
+
 		return &gaper.Config{
 			BinName:              c.String("bin-name"),
 			BuildPath:            c.String("build-path"),
 			BuildArgsMerged:      c.String("build-args"),
 			ProgramArgsMerged:    c.String("program-args"),
-			Verbose:              c.Bool("verbose"),
 			DisableDefaultIgnore: c.Bool("disable-default-ignore"),
 			WatchItems:           c.StringSlice("watch"),
 			IgnoreItems:          c.StringSlice("ignore"),
@@ -42,7 +44,7 @@ func main() {
 	app.Action = func(c *cli.Context) {
 		args := parseArgs(c)
 		chOSSiginal := make(chan os.Signal, 2)
-		logger.Verbose(args.Verbose)
+		logger.Verbose(loggerVerbose)
 
 		if err := gaper.Run(args, chOSSiginal); err != nil {
 			logger.Error(err)

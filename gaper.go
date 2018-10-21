@@ -29,8 +29,6 @@ var (
 	NoRestartOnExit    = "exit"
 )
 
-var logger = NewLogger("gaper")
-
 // exit statuses
 var exitStatusSuccess = 0
 var exitStatusError = 1
@@ -48,7 +46,6 @@ type Config struct {
 	PollInterval         int
 	Extensions           []string
 	NoRestartOn          string
-	Verbose              bool
 	DisableDefaultIgnore bool
 	WorkingDirectory     string
 }
