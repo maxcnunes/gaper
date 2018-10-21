@@ -1,2 +1,2 @@
-timeout 2 2>NUL
+timeout 3 2>NUL
 @echo Gaper Test Message
