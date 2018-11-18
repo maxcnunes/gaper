@@ -103,7 +103,8 @@ func run(cfg *Config, chOSSiginal chan os.Signal, builder Builder, runner Runner
 				continue
 			}
 
-			changeRestart = true
+			changeRestart = runner.IsRunning()
+
 			if err := restart(builder, runner); err != nil {
 				return err
 			}

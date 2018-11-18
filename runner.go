@@ -23,6 +23,7 @@ type Runner interface {
 	Kill() error
 	Errors() chan error
 	Exited() bool
+	IsRunning() bool
 	ExitStatus(err error) int
 }
 
@@ -106,6 +107,11 @@ func (r *runner) Kill() error { // nolint gocyclo
 // Exited checks if the process has exited
 func (r *runner) Exited() bool {
 	return r.command != nil && r.command.ProcessState != nil && r.command.ProcessState.Exited()
+}
+
+// IsRunning returns if the process is running
+func (r *runner) IsRunning() bool {
+	return r.command != nil && r.command.Process != nil && r.command.Process.Pid > 0
 }
 
 // Errors get errors occurred during the build

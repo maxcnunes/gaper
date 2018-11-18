@@ -57,6 +57,12 @@ func (m *MockRunner) Exited() bool {
 	return args.Bool(0)
 }
 
+// IsRunning ...
+func (m *MockRunner) IsRunning() bool {
+	args := m.Called()
+	return args.Bool(0)
+}
+
 // ExitStatus ...
 func (m *MockRunner) ExitStatus(err error) int {
 	args := m.Called()
