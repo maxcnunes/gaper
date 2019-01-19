@@ -92,7 +92,7 @@ gaper
 
 Ignore watch over all test files:
 
-> no need for this in case if you are not using `--disable-default-ignore`
+> no need for this if you have not disabled the default ignore settings `--disable-default-ignore`
 
 ```
 --ignore './**/*_test.go'
