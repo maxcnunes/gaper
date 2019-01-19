@@ -189,11 +189,12 @@ func resolvePaths(paths []string, extensions map[string]bool) (map[string]bool, 
 		}
 
 		for _, match := range matches {
-			// don't care for extension filter right now for non glob paths
-			// since they could be a directory
-			if isGlob {
-				if _, ok := extensions[filepath.Ext(match)]; !ok {
-					continue
+			// ignore existing files that don't match the allowed extensions
+			if f, err := os.Stat(match); !os.IsNotExist(err) && !f.IsDir() {
+				if ext := filepath.Ext(match); ext != "" {
+					if _, ok := extensions[ext]; !ok {
+						continue
+					}
 				}
 			}
 
