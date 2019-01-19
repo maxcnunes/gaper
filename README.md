@@ -64,9 +64,9 @@ GLOBAL OPTIONS:
 
 ### Watch and Ignore paths
 
-For those options gaper supports static paths (e.g. `build/`, `seed.go`) or glob paths (e.g. `migrations/**/up.go`, `*_test.go`).
+For those options Gaper supports static paths (e.g. `build/`, `seed.go`) or glob paths (e.g. `migrations/**/up.go`, `*_test.go`).
 
-On using a path to a directory please add a `/` at the end (e.g. `build/`) to make sure gaper won't include other matches that starts with that same value (e.g. `build/`, `build_settings.go`).
+On using a path to a directory please add a `/` at the end (e.g. `build/`) to make sure Gaper won't include other matches that starts with that same value (e.g. `build/`, `build_settings.go`).
 
 ### Default ignore settings
 
@@ -77,6 +77,10 @@ Since in most projects there is no need to watch changes of:
 * vendor folder
 
 Gaper by default ignores those cases already. Although, if you need Gaper to watch those files anyway it is possible to disable this setting with `--disable-default-ignore` argument.
+
+### Watch method
+
+Currently Gaper uses polling to watch file changes. We have plans to [support fs events](https://github.com/maxcnunes/gaper/issues/12) though in a near future.
 
 ### Examples
 
