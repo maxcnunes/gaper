@@ -1,7 +1,6 @@
 package gaper
 
 import (
-	"log"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -173,6 +172,11 @@ func TestWatcherIgnoreFile(t *testing.T) {
 		},
 	}
 
+	// create vendor folder for testing
+	if err := os.MkdirAll("vendor", os.ModePerm); err != nil {
+		t.Fatal(err)
+	}
+
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			srvdir := "."
@@ -198,12 +202,12 @@ func TestWatcherIgnoreFile(t *testing.T) {
 			filePath := tc.file
 			file, err := os.Open(filePath)
 			if err != nil {
-				log.Fatal(err)
+				t.Fatal(err)
 			}
 
 			fileInfo, err := file.Stat()
 			if err != nil {
-				log.Fatal(err)
+				t.Fatal(err)
 			}
 
 			assert.Equal(t, tc.expectIgnore, wt.ignoreFile(filePath, fileInfo))

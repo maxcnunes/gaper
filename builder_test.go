@@ -38,13 +38,11 @@ func TestBuilderFailureBuild(t *testing.T) {
 		t.Fatalf("couldn't get current working directory: %v", err)
 	}
 
-	absPathBuild := filepath.Join(wd, dir)
-
 	b := NewBuilder(dir, bin, wd, bArgs)
 	err = b.Build()
 	assert.NotNil(t, err, "build error")
 	assert.Equal(t, err.Error(), "build failed with exit status 2\n"+
-		"# _"+absPathBuild+"\n"+
+		"# github.com/maxcnunes/gaper/testdata/build-failure\n"+
 		"./main.go:4:6: func main must have no arguments and no return values\n"+
 		"./main.go:5:1: missing return at end of function\n")
 }
