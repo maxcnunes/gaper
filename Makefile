@@ -6,12 +6,6 @@ LINTER		:= $(shell command -v gometalinter 2> /dev/null)
 .PHONY: setup
 
 setup:
-ifeq ($(OS), Darwin)
-	brew install dep
-else
-	curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-endif
-	dep ensure -vendor-only
 ifndef LINTER
 	@echo "Installing linter"
 	@go get -u github.com/alecthomas/gometalinter
