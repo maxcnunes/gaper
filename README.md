@@ -18,15 +18,23 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/maxcnunes/gaper)](https://goreportcard.com/report/github.com/maxcnunes/gaper)
 [![Powered By: GoReleaser](https://img.shields.io/badge/powered%20by-goreleaser-green.svg?style=flat-square)](https://github.com/goreleaser)
 
+## Changelog
+
+See [Releases](https://github.com/maxcnunes/gaper/releases) for detailed history changes.
+
 ## Installation
+
+Using go tooling:
 
 ```
 go get -u github.com/maxcnunes/gaper/cmd/gaper
 ```
 
-## Changelog
+Or, downloading the binary instead (example for version 1.0.3, make sure you are using the latest version though):
 
-See [Releases](https://github.com/maxcnunes/gaper/releases) for detailed history changes.
+```
+curl -SL https://github.com/maxcnunes/gaper/releases/download/v1.0.3/gaper_1.0.3_linux_amd64.tar.gz | tar -xvzf - -C "${GOPATH}/bin"
+```
 
 ## Usage
 
