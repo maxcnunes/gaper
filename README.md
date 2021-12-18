@@ -108,7 +108,7 @@ gaper \
 	--watch .
 ```
 
-Ignore watch over all test files:
+Example to ignore watching over all test files:
 
 > no need for this if you have not disabled the default ignore settings `--disable-default-ignore`
 
