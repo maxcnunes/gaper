@@ -98,6 +98,16 @@ Using all defaults provided by Gaper:
 gaper
 ```
 
+Example providing a few custom configurations:
+
+```
+gaper \
+	--bin-name build/api-dev \
+	--build-path cmd/server \
+	--build-args "-ldflags=\"-X 'main.Version=dev'" \
+	--watch .
+```
+
 Ignore watch over all test files:
 
 > no need for this if you have not disabled the default ignore settings `--disable-default-ignore`

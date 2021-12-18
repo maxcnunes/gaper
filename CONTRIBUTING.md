@@ -28,7 +28,7 @@ make setup
 ### Running gaper in development
 
 ```
-make build && ./gaper --verbose --bin-name srv --build-path ./testdata/server
+make build && ./gaper --verbose --bin-name srv --build-path ./testdata/server --build-args="-ldflags=\"-X 'main.Version=v1.0.0'\""
 ```
 
 ### Running lint
