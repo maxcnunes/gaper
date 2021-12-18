@@ -61,7 +61,7 @@ GLOBAL OPTIONS:
    --watch value, -w value          list of folders or files to watch for changes
    --ignore value, -i value         list of folders or files to ignore for changes
    --poll-interval value, -p value  how often in milliseconds to poll watched files for changes (default: 500)
-   --extensions value, -e value     a comma-delimited list of file extensions to watch for changes (default: "go")
+   --extensions value, -e value     extensions to watch for changes (default: "go")
    --no-restart-on value, -n value  don't automatically restart the supervised program if it ends:
                                       if "error", an exit code of 0 will still restart.
                                       if "exit", no restart regardless of exit code.
@@ -105,6 +105,8 @@ gaper \
 	--bin-name build/api-dev \
 	--build-path cmd/server \
 	--build-args "-ldflags=\"-X 'main.Version=dev'" \
+	-w 'public/**' -w '*.go' \
+	-e js -e css -e html \
 	--watch .
 ```
 

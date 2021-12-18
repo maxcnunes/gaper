@@ -59,6 +59,8 @@ func Run(cfg *Config, chOSSiginal chan os.Signal) error {
 		return err
 	}
 
+	logger.Debugf("Config: %+v", cfg)
+
 	wCfg := WatcherConfig{
 		DefaultIgnore: !cfg.DisableDefaultIgnore,
 		PollInterval:  cfg.PollInterval,
