@@ -118,6 +118,11 @@ func (w *watcher) scanChange(watchPath string) (string, error) {
 
 	err := filepath.Walk(watchPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
+			// Ignore attempt to acess go temporary unmask
+			if strings.Contains(err.Error(), "-go-tmp-umask") {
+				return filepath.SkipDir
+			}
+
 			return fmt.Errorf("couldn't walk to path \"%s\": %v", path, err)
 		}
 
