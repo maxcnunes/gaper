@@ -33,7 +33,8 @@ make build && \
 	--verbose \
 	--bin-name srv \
 	--build-path ./testdata/server \
-	--build-args="-ldflags=\"-X 'main.Version=v1.0.0'\""
+	--build-args="-ldflags=\"-X 'main.Version=v1.0.0'\"" \
+	--extensions "go,txt"
 ```
 
 ### Running lint
