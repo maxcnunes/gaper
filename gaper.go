@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"strings"
 	"syscall"
 	"time"
 
@@ -207,6 +208,15 @@ func setupConfig(cfg *Config) error {
 	if len(cfg.WatchItems) == 0 {
 		cfg.WatchItems = append(cfg.WatchItems, cfg.BuildPath)
 	}
+
+	var extensions []string
+	for i := range cfg.Extensions {
+		values := strings.Split(cfg.Extensions[i], ",")
+		for _, e := range values {
+			extensions = append(extensions, e)
+		}
+	}
+	cfg.Extensions = extensions
 
 	return nil
 }

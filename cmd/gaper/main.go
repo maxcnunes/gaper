@@ -9,9 +9,9 @@ import (
 
 // build info
 var (
-	// keep the version hardcoded because on installing it through "go get/install"
-	// it doesn't apply the build tags to override it. So, it is make easier for
-	// people using in that case to find out which version they are using
+	// Version is hardcoded because when installing it through "go get/install"
+	// the build tags are not available to override it.
+	// Update it after every release.
 	version = "1.0.3-dev"
 )
 
@@ -53,9 +53,7 @@ func main() {
 	}
 
 	exts := make(cli.StringSlice, len(gaper.DefaultExtensions))
-	for i := range gaper.DefaultExtensions {
-		exts[i] = gaper.DefaultExtensions[i]
-	}
+	copy(exts, gaper.DefaultExtensions)
 
 	// supported arguments
 	app.Flags = []cli.Flag{
