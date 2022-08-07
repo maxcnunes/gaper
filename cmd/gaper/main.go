@@ -4,7 +4,7 @@ import (
 	"os"
 
 	"github.com/maxcnunes/gaper"
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 )
 
 // build info
@@ -41,67 +41,61 @@ func main() {
 	app.Usage = "Used to build and restart a Go project when it crashes or some watched file changes"
 	app.Version = version
 
-	app.Action = func(c *cli.Context) {
+	app.Action = func(c *cli.Context) error {
 		args := parseArgs(c)
 		chOSSiginal := make(chan os.Signal, 2)
 		logger.Verbose(loggerVerbose)
 
-		if err := gaper.Run(args, chOSSiginal); err != nil {
-			logger.Error(err)
-			os.Exit(1)
-		}
+		return gaper.Run(args, chOSSiginal)
 	}
-
-	exts := make(cli.StringSlice, len(gaper.DefaultExtensions))
-	copy(exts, gaper.DefaultExtensions)
 
 	// supported arguments
 	app.Flags = []cli.Flag{
-		cli.StringFlag{
+		&cli.StringFlag{
 			Name:  "bin-name",
 			Usage: "name for the binary built by gaper for the executed program (default current directory name)",
 		},
-		cli.StringFlag{
+		&cli.StringFlag{
 			Name:  "build-path",
 			Value: gaper.DefaultBuildPath,
 			Usage: "path to the program source code",
 		},
-		cli.StringFlag{
+		&cli.StringFlag{
 			Name:  "build-args",
 			Usage: "arguments used on building the program",
 		},
-		cli.StringFlag{
+		&cli.StringFlag{
 			Name:  "program-args",
 			Usage: "arguments used on executing the program",
 		},
-		cli.BoolFlag{
+		&cli.BoolFlag{
 			Name:  "verbose",
 			Usage: "turns on the verbose messages from gaper",
 		},
-		cli.BoolFlag{
+		&cli.BoolFlag{
 			Name:  "disable-default-ignore",
 			Usage: "turns off default ignore for hidden files and folders, \"*_test.go\" files, and vendor folder",
 		},
-		cli.StringSliceFlag{
+		&cli.StringSliceFlag{
 			Name:  "watch, w",
 			Usage: "list of folders or files to watch for changes",
 		},
-		cli.StringSliceFlag{
+		&cli.StringSliceFlag{
 			Name: "ignore, i",
 			Usage: "list of folders or files to ignore for changes\n" +
 				"\t\t(always ignores all hidden files and directories)",
 		},
-		cli.IntFlag{
+		&cli.IntFlag{
 			Name:  "poll-interval, p",
 			Value: gaper.DefaultPoolInterval,
 			Usage: "how often in milliseconds to poll watched files for changes",
 		},
-		cli.StringSliceFlag{
+		&cli.StringSliceFlag{
 			Name:  "extensions, e",
-			Value: &exts,
+			Value: cli.NewStringSlice(gaper.DefaultExtensions...),
 			Usage: "a comma-delimited list of file extensions to watch for changes",
 		},
-		cli.StringFlag{
+		&cli.StringFlag{
 			Name: "no-restart-on, n",
 			Usage: "don't automatically restart the supervised program if it ends:\n" +
 				"\t\tif \"error\", an exit code of 0 will still restart.\n" +
