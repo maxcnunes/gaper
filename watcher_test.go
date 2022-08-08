@@ -104,14 +104,19 @@ func TestWatcherWatchChange(t *testing.T) {
 	time.Sleep(time.Millisecond * 500)
 
 	// update hidden files and dirs to check builtin hidden ignore is working
-	os.Chtimes(hiddenfile1, time.Now(), time.Now())
-	os.Chtimes(hiddenfile2, time.Now(), time.Now())
+	err = os.Chtimes(hiddenfile1, time.Now(), time.Now())
+	assert.Nil(t, err, "chtimes error")
+
+	err = os.Chtimes(hiddenfile2, time.Now(), time.Now())
+	assert.Nil(t, err, "chtimes error")
 
 	// update testfile first to check ignore is working
-	os.Chtimes(testfile, time.Now(), time.Now())
+	err = os.Chtimes(testfile, time.Now(), time.Now())
+	assert.Nil(t, err, "chtimes error")
 
 	time.Sleep(time.Millisecond * 500)
-	os.Chtimes(mainfile, time.Now(), time.Now())
+	err = os.Chtimes(mainfile, time.Now(), time.Now())
+	assert.Nil(t, err, "chtimes error")
 
 	select {
 	case event := <-w.Events():

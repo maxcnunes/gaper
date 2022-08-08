@@ -212,9 +212,7 @@ func setupConfig(cfg *Config) error {
 	var extensions []string
 	for i := range cfg.Extensions {
 		values := strings.Split(cfg.Extensions[i], ",")
-		for _, e := range values {
-			extensions = append(extensions, e)
-		}
+		extensions = append(extensions, values...)
 	}
 	cfg.Extensions = extensions
 

@@ -3,26 +3,14 @@ TEST_PACKAGES	:= $(shell go list ./... | grep -v cmd)
 COVER_PACKAGES	:= $(shell go list ./... | grep -v cmd | paste -sd "," -)
 LINTER		:= $(shell command -v gometalinter 2> /dev/null)
 
-.PHONY: setup
-
-setup:
-ifndef LINTER
-	@echo "Installing linter"
-	@go get -u github.com/alecthomas/gometalinter
-	@gometalinter --install
-endif
-
 build:
 	@go build -o ./gaper cmd/gaper/main.go
 
 ## lint: Validate golang code
+# Install it following this doc https://golangci-lint.run/usage/install/#local-installation,
+# please use the same version from .github/workflows/workflow.yml.
 lint:
-	@gometalinter \
-		--deadline=120s \
-		--line-length=120 \
-		--enable-all \
-		--disable=gochecknoinits --disable=gochecknoglobals \
-		--vendor ./...
+	@golangci-lint run
 
 test:
 	@go test -p=1 -coverpkg $(COVER_PACKAGES) \

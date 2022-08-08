@@ -17,7 +17,6 @@ type Builder interface {
 type builder struct {
 	dir       string
 	binary    string
-	errors    string
 	wd        string
 	buildArgs []string
 }
