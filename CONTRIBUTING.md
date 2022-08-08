@@ -55,3 +55,6 @@ A single test:
 go test -run TestSimplePost ./...
 ```
 
+### Release
+
+The release runs automatically with a Github action on pushed git tags.
