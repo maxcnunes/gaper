@@ -30,10 +30,10 @@ Using go tooling:
 go get -u github.com/maxcnunes/gaper/cmd/gaper
 ```
 
-Or, downloading the binary instead (example for version 1.0.3, make sure you are using the latest version though):
+Or, downloading the binary instead (example for version 1.1.0, make sure you are using the latest version though):
 
 ```
-curl -SL https://github.com/maxcnunes/gaper/releases/download/v1.0.3/gaper_1.0.3_linux_amd64.tar.gz | tar -xvzf - -C "${GOPATH}/bin"
+curl -SL https://github.com/maxcnunes/gaper/releases/download/v1.1.0/gaper_1.1.0_linux_amd64.tar.gz | tar -xvzf - -C "${GOPATH}/bin"
 ```
 
 ## Usage
@@ -78,7 +78,7 @@ On using a path to a directory please add a `/` at the end (e.g. `build/`) to ma
 
 ### Default ignore settings
 
-Since in most projects there is no need to watch changes of:
+Since in most projects there is no need to watch changes for:
 
 * hidden files and folders
 * test files (`*_test.go`)
@@ -102,20 +102,14 @@ Example providing a few custom configurations:
 
 ```
 gaper \
-	--bin-name build/api-dev \
-	--build-path cmd/server \
-	--build-args "-ldflags=\"-X 'main.Version=dev'" \
-	-w 'public/**' -w '*.go' \
-	-e js -e css -e html \
-	--watch .
-```
-
-Example to ignore watching over all test files:
-
-> no need for this if you have not disabled the default ignore settings `--disable-default-ignore`
-
-```
---ignore './**/*_test.go'
+    --bin-name build/api-dev \
+    --build-path cmd/server \
+    --build-args "-ldflags=\"-X 'main.Version=dev'" \
+    -w 'public/**' -w '*.go' \
+    -e js -e css -e html \
+    --ignore './**/*_mock.go' \
+    --program-args "-arg1 ok -arg2=nope" \
+    --watch .
 ```
 
 ## Contributing
