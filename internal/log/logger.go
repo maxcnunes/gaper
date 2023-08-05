@@ -1,4 +1,4 @@
-package gaper
+package log
 
 import (
 	"log"
@@ -8,12 +8,7 @@ import (
 )
 
 // logger use by the whole package
-var logger = newLogger("gaper")
-
-// Logger give access to external packages to use gaper logger
-func Logger() *LoggerEntity {
-	return logger
-}
+var Logger = newLogger("gaper")
 
 // LoggerEntity used by gaper
 type LoggerEntity struct {

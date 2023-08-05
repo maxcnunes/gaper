@@ -3,6 +3,7 @@ package testdata
 import (
 	"os/exec"
 
+	"github.com/fsnotify/fsnotify"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -78,9 +79,9 @@ type MockWacther struct {
 func (m *MockWacther) Watch() {}
 
 // Events ...
-func (m *MockWacther) Events() chan string {
+func (m *MockWacther) Events() chan []fsnotify.Event {
 	args := m.Called()
-	return args.Get(0).(chan string)
+	return args.Get(0).(chan []fsnotify.Event)
 }
 
 // Errors ...

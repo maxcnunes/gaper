@@ -1,4 +1,4 @@
-package gaper
+package run
 
 import (
 	"errors"
@@ -9,10 +9,9 @@ import (
 	"runtime"
 	"syscall"
 	"time"
-)
 
-// OSWindows is used to check if current OS is a Windows
-const OSWindows = "windows"
+	"github.com/maxcnunes/gaper/internal/log"
+)
 
 // os errors
 var errFinished = errors.New("os: process already finished")
@@ -33,7 +32,6 @@ type runner struct {
 	writerStdout io.Writer
 	writerStderr io.Writer
 	command      *exec.Cmd
-	starttime    time.Time
 	errors       chan error
 	end          chan bool // used internally by Kill to wait a process die
 }
@@ -45,7 +43,6 @@ func NewRunner(wStdout io.Writer, wStderr io.Writer, bin string, args []string) 
 		args:         args,
 		writerStdout: wStdout,
 		writerStderr: wStderr,
-		starttime:    time.Now(),
 		errors:       make(chan error),
 		end:          make(chan bool),
 	}
@@ -53,7 +50,7 @@ func NewRunner(wStdout io.Writer, wStderr io.Writer, bin string, args []string) 
 
 // Run executes the project binary
 func (r *runner) Run() (*exec.Cmd, error) {
-	logger.Info("Starting program")
+	log.Logger.Info("Starting program")
 
 	if r.command != nil && !r.Exited() {
 		return r.command, nil
@@ -79,7 +76,7 @@ func (r *runner) Kill() error { // nolint gocyclo
 	}()
 
 	// Trying a "soft" kill first
-	if runtime.GOOS == OSWindows {
+	if runtime.GOOS == "windows" {
 		if err := r.command.Process.Kill(); err != nil {
 			return err
 		}
@@ -133,26 +130,14 @@ func (r *runner) ExitStatus(err error) int {
 
 func (r *runner) runBin() error {
 	r.command = exec.Command(r.bin, r.args...) // nolint gas
-	stdout, err := r.command.StdoutPipe()
+
+	r.command.Stdout = r.writerStdout
+	r.command.Stderr = r.writerStderr
+
+	err := r.command.Start()
 	if err != nil {
 		return err
 	}
-
-	stderr, err := r.command.StderrPipe()
-	if err != nil {
-		return err
-	}
-
-	// TODO: handle or log errors
-	go io.Copy(r.writerStdout, stdout) // nolint errcheck
-	go io.Copy(r.writerStderr, stderr) // nolint errcheck
-
-	err = r.command.Start()
-	if err != nil {
-		return err
-	}
-
-	r.starttime = time.Now()
 
 	// wait for exit errors
 	go func() {

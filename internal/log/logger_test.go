@@ -1,4 +1,4 @@
-package gaper
+package log
 
 import (
 	"testing"

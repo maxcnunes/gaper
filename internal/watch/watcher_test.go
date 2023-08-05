@@ -1,101 +1,96 @@
-package gaper
+package watch
 
 import (
 	"os"
 	"path/filepath"
-	"runtime"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 )
 
+func testdataPath(paths ...string) string {
+	return filepath.Join("..", "..", "testdata", filepath.Join(paths...))
+}
+
 func TestWatcherDefaultValues(t *testing.T) {
-	pollInterval := 0
-	watchItems := []string{filepath.Join("testdata", "server")}
+	watchItems := []string{testdataPath("server")}
 	var ignoreItems []string
-	var extensions []string
 
 	wCfg := WatcherConfig{
 		DefaultIgnore: true,
-		PollInterval:  pollInterval,
+		Poll:          true,
+		PollInterval:  500 * time.Millisecond,
 		WatchItems:    watchItems,
 		IgnoreItems:   ignoreItems,
-		Extensions:    extensions,
+		Extensions:    []string{"go"},
 	}
 	wt, err := NewWatcher(wCfg)
 
-	expectedPath := "testdata/server"
-	if runtime.GOOS == OSWindows {
-		expectedPath = "testdata\\server"
-	}
+	expectedPath := testdataPath("server")
 
 	w := wt.(*watcher)
 	assert.Nil(t, err, "wacher error")
-	assert.Equal(t, 500, w.pollInterval)
 	assert.Equal(t, map[string]bool{expectedPath: true}, w.watchItems)
 	assert.Len(t, w.ignoreItems, 0)
 	assert.Equal(t, map[string]bool{".go": true}, w.allowedExtensions)
 }
 
 func TestWatcherGlobPath(t *testing.T) {
-	pollInterval := 0
-	watchItems := []string{filepath.Join("testdata", "server")}
-	ignoreItems := []string{"./testdata/**/*_test.go"}
-	var extensions []string
+	watchItems := []string{testdataPath("server")}
+	ignoreItems := []string{"../../testdata/**/*_test.go"}
 
 	wCfg := WatcherConfig{
 		DefaultIgnore: true,
-		PollInterval:  pollInterval,
+		Poll:          true,
+		PollInterval:  500 * time.Millisecond,
 		WatchItems:    watchItems,
 		IgnoreItems:   ignoreItems,
-		Extensions:    extensions,
+		Extensions:    []string{"go"},
 	}
 	wt, err := NewWatcher(wCfg)
 	assert.Nil(t, err, "wacher error")
 	w := wt.(*watcher)
-	assert.Equal(t, map[string]bool{"testdata/server/main_test.go": true}, w.ignoreItems)
+	assert.Equal(t, map[string]bool{"../../testdata/server/main_test.go": true}, w.ignoreItems)
 }
 
 func TestWatcherRemoveOverlapdPaths(t *testing.T) {
-	pollInterval := 0
-	watchItems := []string{filepath.Join("testdata", "server")}
-	ignoreItems := []string{"./testdata/server/**/*", "./testdata/server"}
-	var extensions []string
+	watchItems := []string{testdataPath("server")}
+	ignoreItems := []string{"../../testdata/server/**/*", "../../testdata/server"}
 
 	wCfg := WatcherConfig{
 		DefaultIgnore: true,
-		PollInterval:  pollInterval,
+		Poll:          true,
+		PollInterval:  500 * time.Millisecond,
 		WatchItems:    watchItems,
 		IgnoreItems:   ignoreItems,
-		Extensions:    extensions,
+		Extensions:    []string{"go"},
 	}
 	wt, err := NewWatcher(wCfg)
 	assert.Nil(t, err, "wacher error")
 	w := wt.(*watcher)
-	assert.Equal(t, map[string]bool{"./testdata/server": true}, w.ignoreItems)
+	assert.Equal(t, map[string]bool{"../../testdata/server": true}, w.ignoreItems)
 }
 
 func TestWatcherWatchChange(t *testing.T) {
-	srvdir := filepath.Join("testdata", "server")
-	hiddendir := filepath.Join("testdata", "hidden-test")
+	srvdir := testdataPath("server")
+	hiddendir := testdataPath("hidden-test")
 
-	hiddenfile1 := filepath.Join("testdata", ".hidden-file")
-	hiddenfile2 := filepath.Join("testdata", ".hidden-folder", ".gitkeep")
-	mainfile := filepath.Join("testdata", "server", "main.go")
-	testfile := filepath.Join("testdata", "server", "main_test.go")
+	hiddenfile1 := testdataPath(".hidden-file")
+	hiddenfile2 := testdataPath(".hidden-folder", ".gitkeep")
+	mainfile := testdataPath("server", "main.go")
+	testfile := testdataPath("server", "main_test.go")
 
-	pollInterval := 0
 	watchItems := []string{srvdir, hiddendir}
 	ignoreItems := []string{testfile}
-	extensions := []string{"go"}
 
 	wCfg := WatcherConfig{
 		DefaultIgnore: true,
-		PollInterval:  pollInterval,
+		Poll:          true,
+		PollInterval:  500 * time.Millisecond,
 		WatchItems:    watchItems,
 		IgnoreItems:   ignoreItems,
-		Extensions:    extensions,
+		Extensions:    []string{"go"},
 	}
 	w, err := NewWatcher(wCfg)
 	assert.Nil(t, err, "wacher error")
@@ -119,103 +114,96 @@ func TestWatcherWatchChange(t *testing.T) {
 	assert.Nil(t, err, "chtimes error")
 
 	select {
-	case event := <-w.Events():
-		assert.Equal(t, mainfile, event)
+	case events := <-w.Events():
+		assert.Equal(t, 1, len(events))
+		assert.Equal(t, mainfile, events[0].Name)
 	case err := <-w.Errors():
 		assert.Nil(t, err, "wacher event error")
 	}
 }
 
 func TestWatcherIgnoreFile(t *testing.T) {
+	vendorPath := filepath.Join("..", "..", "vendor")
+
 	testCases := []struct {
 		name, file, ignoreFile      string
 		defaultIgnore, expectIgnore bool
 	}{
 		{
 			name:          "with default ignore enabled it ignores vendor folder",
-			file:          "vendor",
+			file:          vendorPath,
 			defaultIgnore: true,
 			expectIgnore:  true,
 		},
 		{
 			name:          "without default ignore enabled it does not ignore vendor folder",
-			file:          "vendor",
+			file:          vendorPath,
 			defaultIgnore: false,
 			expectIgnore:  false,
 		},
 		{
 			name:          "with default ignore enabled it ignores test file",
-			file:          filepath.Join("testdata", "server", "main_test.go"),
+			file:          testdataPath("server", "main_test.go"),
 			defaultIgnore: true,
 			expectIgnore:  true,
 		},
 		{
-			name:          "with default ignore enabled it does no ignore non test files which have test in the name",
-			file:          filepath.Join("testdata", "ignore-test-name.txt"),
+			name:          "with default ignore enabled it does not ignore non test files which have test in the name",
+			file:          testdataPath("ignore-test-name.txt"),
 			defaultIgnore: true,
 			expectIgnore:  false,
 		},
 		{
 			name:          "without default ignore enabled it does not ignore test file",
-			file:          filepath.Join("testdata", "server", "main_test.go"),
+			file:          testdataPath("server", "main_test.go"),
 			defaultIgnore: false,
 			expectIgnore:  false,
 		},
 		{
 			name:          "with default ignore enabled it ignores ignored items",
-			file:          filepath.Join("testdata", "server", "main.go"),
-			ignoreFile:    filepath.Join("testdata", "server", "main.go"),
+			file:          testdataPath("server", "main.go"),
+			ignoreFile:    testdataPath("server", "main.go"),
 			defaultIgnore: true,
 			expectIgnore:  true,
 		},
 		{
 			name:          "without default ignore enabled it ignores ignored items",
-			file:          filepath.Join("testdata", "server", "main.go"),
-			ignoreFile:    filepath.Join("testdata", "server", "main.go"),
+			file:          testdataPath("server", "main.go"),
+			ignoreFile:    testdataPath("server", "main.go"),
 			defaultIgnore: false,
 			expectIgnore:  true,
 		},
 	}
 
 	// create vendor folder for testing
-	if err := os.MkdirAll("vendor", os.ModePerm); err != nil {
+	if err := os.MkdirAll(vendorPath, os.ModePerm); err != nil {
 		t.Fatal(err)
 	}
 
+	defer os.RemoveAll(vendorPath)
+
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			srvdir := "."
+			srvdir := filepath.Join("..", "..")
 
 			watchItems := []string{srvdir}
 			ignoreItems := []string{}
 			if len(tc.ignoreFile) > 0 {
 				ignoreItems = append(ignoreItems, tc.ignoreFile)
 			}
-			extensions := []string{"go"}
 
 			wCfg := WatcherConfig{
 				DefaultIgnore: tc.defaultIgnore,
 				WatchItems:    watchItems,
 				IgnoreItems:   ignoreItems,
-				Extensions:    extensions,
+				Extensions:    []string{"go", "txt"},
 			}
 			w, err := NewWatcher(wCfg)
 			assert.Nil(t, err, "wacher error")
 
 			wt := w.(*watcher)
 
-			filePath := tc.file
-			file, err := os.Open(filePath)
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			fileInfo, err := file.Stat()
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			assert.Equal(t, tc.expectIgnore, wt.ignoreFile(filePath, fileInfo))
+			assert.Equal(t, tc.expectIgnore, wt.ignoreFile(tc.file))
 		})
 	}
 }
