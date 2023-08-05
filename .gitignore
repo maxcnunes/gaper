@@ -8,3 +8,5 @@ coverage.out
 testdata/server/server
 dist
 test-srv
+testdata/.hidden-file
+testdata/.hidden-folder

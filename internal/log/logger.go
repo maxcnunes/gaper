@@ -1,4 +1,4 @@
-package gaper
+package log
 
 import (
 	"log"
@@ -8,12 +8,7 @@ import (
 )
 
 // logger use by the whole package
-var logger = newLogger("gaper")
-
-// Logger give access to external packages to use gaper logger
-func Logger() *LoggerEntity {
-	return logger
-}
+var Logger = newLogger("gaper")
 
 // LoggerEntity used by gaper
 type LoggerEntity struct {
@@ -27,7 +22,7 @@ type LoggerEntity struct {
 func newLogger(prefix string) *LoggerEntity {
 	prefix = "[" + prefix + "] "
 	return &LoggerEntity{
-		verbose:  false,
+		verbose:  os.Getenv("GAPER_VERBOSE")  == "true",
 		logDebug: log.New(os.Stdout, prefix, 0),
 		logInfo:  log.New(os.Stdout, color.CyanString(prefix), 0),
 		logError: log.New(os.Stdout, color.RedString(prefix), 0),

@@ -21,3 +21,19 @@ func main() {
 	log.Println("Starting server: Version", Version)
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

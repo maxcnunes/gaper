@@ -1,4 +1,4 @@
-package gaper
+package build
 
 import (
 	"os"
@@ -12,7 +12,7 @@ import (
 func TestBuilderSuccessBuild(t *testing.T) {
 	bArgs := []string{}
 	bin := resolveBinNameByOS("srv")
-	dir := filepath.Join("testdata", "server")
+	dir := filepath.Join("..", "..", "testdata", "server")
 	wd, err := os.Getwd()
 	if err != nil {
 		t.Fatalf("couldn't get current working directory: %v", err)
@@ -32,7 +32,7 @@ func TestBuilderSuccessBuild(t *testing.T) {
 func TestBuilderFailureBuild(t *testing.T) {
 	bArgs := []string{}
 	bin := "srv"
-	dir := filepath.Join("testdata", "build-failure")
+	dir := filepath.Join("..", "..", "testdata", "build-failure")
 	wd, err := os.Getwd()
 	if err != nil {
 		t.Fatalf("couldn't get current working directory: %v", err)
@@ -41,7 +41,7 @@ func TestBuilderFailureBuild(t *testing.T) {
 	b := NewBuilder(dir, bin, wd, bArgs)
 	err = b.Build()
 	assert.NotNil(t, err, "build error")
-	assert.Equal(t, err.Error(), "build failed with exit status 2\n"+
+	assert.Equal(t, err.Error(), "build failed with exit status 1\n"+
 		"# github.com/maxcnunes/gaper/testdata/build-failure\n"+
 		"./main.go:4:6: func main must have no arguments and no return values\n"+
 		"./main.go:5:1: missing return\n")
@@ -49,14 +49,14 @@ func TestBuilderFailureBuild(t *testing.T) {
 
 func TestBuilderDefaultBinName(t *testing.T) {
 	bin := ""
-	dir := filepath.Join("testdata", "server")
+	dir := filepath.Join("..", "..", "testdata", "server")
 	wd := "/src/projects/project-name"
 	b := NewBuilder(dir, bin, wd, nil)
 	assert.Equal(t, b.Binary(), resolveBinNameByOS("project-name"))
 }
 
 func resolveBinNameByOS(name string) string {
-	if runtime.GOOS == OSWindows {
+	if runtime.GOOS == "windows" {
 		name += ".exe"
 	}
 	return name

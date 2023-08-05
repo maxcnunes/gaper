@@ -3,8 +3,9 @@ package main
 import (
 	"os"
 
-	"github.com/maxcnunes/gaper"
 	"github.com/urfave/cli/v2"
+
+	gaper "github.com/maxcnunes/gaper/v2"
 )
 
 // build info
@@ -30,7 +31,8 @@ func main() {
 			DisableDefaultIgnore: c.Bool("disable-default-ignore"),
 			WatchItems:           c.StringSlice("watch"),
 			IgnoreItems:          c.StringSlice("ignore"),
-			PollInterval:         c.Int("poll-interval"),
+			Poll:                 c.Bool("poll"),
+			PollInterval:         c.Duration("poll-interval"),
 			Extensions:           c.StringSlice("extensions"),
 			NoRestartOn:          c.String("no-restart-on"),
 		}
@@ -85,10 +87,15 @@ func main() {
 			Usage: "list of folders or files to ignore for changes\n" +
 				"\t\t(always ignores all hidden files and directories)",
 		},
-		&cli.IntFlag{
-			Name:  "poll-interval, p",
+		&cli.BoolFlag{
+			Name:  "poll, p",
+			Value: false,
+			Usage: "uses poll instead of fs events to watch file changes",
+		},
+		&cli.DurationFlag{
+			Name:  "poll-interval",
 			Value: gaper.DefaultPoolInterval,
-			Usage: "how often in milliseconds to poll watched files for changes",
+			Usage: "how often in milliseconds to poll watched files for changes (e.g. 1s, 500ms)",
 		},
 		&cli.StringSliceFlag{
 			Name:  "extensions, e",

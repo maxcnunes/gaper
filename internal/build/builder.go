@@ -1,4 +1,4 @@
-package gaper
+package build
 
 import (
 	"fmt"
@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+
+	"github.com/maxcnunes/gaper/v2/internal/log"
 )
 
 // Builder is a interface for the build process
@@ -29,7 +31,7 @@ func NewBuilder(dir string, bin string, wd string, buildArgs []string) Builder {
 	}
 
 	// does not work on Windows without the ".exe" extension
-	if runtime.GOOS == OSWindows {
+	if runtime.GOOS == "windows" {
 		// check if it already has the .exe extension
 		if !strings.HasSuffix(bin, ".exe") {
 			bin += ".exe"
@@ -46,9 +48,9 @@ func (b *builder) Binary() string {
 
 // Build the Golang project set for this builder
 func (b *builder) Build() error {
-	logger.Info("Building program")
+	log.Logger.Info("Building program")
 	args := append([]string{"go", "build", "-o", filepath.Join(b.wd, b.binary)}, b.buildArgs...)
-	logger.Debug("Build command", args)
+	log.Logger.Debug("Build command", args)
 
 	command := exec.Command(args[0], args[1:]...) // nolint gas
 	command.Dir = b.dir
