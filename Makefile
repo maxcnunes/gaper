@@ -13,8 +13,11 @@ lint:
 	@golangci-lint run
 
 test:
-	@go test -p=1 -coverpkg $(COVER_PACKAGES) \
-		-covermode=atomic -coverprofile=coverage.out $(TEST_PACKAGES)
+	@go test -p=1 -v \
+		-coverpkg $(COVER_PACKAGES) \
+		-covermode=atomic \
+		-coverprofile=coverage.out \
+		$(TEST_PACKAGES)
 
 cover: test
 	@go tool cover -html=coverage.out

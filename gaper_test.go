@@ -9,8 +9,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/maxcnunes/gaper/testdata"
+	"github.com/fsnotify/fsnotify"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/maxcnunes/gaper/testdata"
 )
 
 func TestGaperRunStopOnSGINT(t *testing.T) {
@@ -48,7 +50,7 @@ func TestGaperBuildError(t *testing.T) {
 	cfg := &Config{}
 
 	chOSSiginal := make(chan os.Signal, 2)
-	err := run(cfg, chOSSiginal, mockBuilder, mockRunner, mockWatcher)
+	err := start(cfg, chOSSiginal, mockBuilder, mockRunner, mockWatcher)
 	assert.NotNil(t, err, "build error")
 	assert.Equal(t, "build error: build-error", err.Error())
 }
@@ -63,7 +65,7 @@ func TestGaperRunError(t *testing.T) {
 	cfg := &Config{}
 
 	chOSSiginal := make(chan os.Signal, 2)
-	err := run(cfg, chOSSiginal, mockBuilder, mockRunner, mockWatcher)
+	err := start(cfg, chOSSiginal, mockBuilder, mockRunner, mockWatcher)
 	assert.NotNil(t, err, "runner error")
 	assert.Equal(t, "run error: runner-error", err.Error())
 }
@@ -80,7 +82,7 @@ func TestGaperWatcherError(t *testing.T) {
 
 	mockWatcher := new(testdata.MockWacther)
 	watcherErrorsChan := make(chan error)
-	watcherEvetnsChan := make(chan string)
+	watcherEvetnsChan := make(chan []fsnotify.Event)
 	mockWatcher.On("Errors").Return(watcherErrorsChan)
 	mockWatcher.On("Events").Return(watcherEvetnsChan)
 
@@ -96,7 +98,7 @@ func TestGaperWatcherError(t *testing.T) {
 		watcherErrorsChan <- errors.New("watcher-error")
 	}()
 	chOSSiginal := make(chan os.Signal, 2)
-	err := run(cfg, chOSSiginal, mockBuilder, mockRunner, mockWatcher)
+	err := start(cfg, chOSSiginal, mockBuilder, mockRunner, mockWatcher)
 	assert.NotNil(t, err, "build error")
 	assert.Equal(t, "error on watching files: watcher-error", err.Error())
 	mockBuilder.AssertExpectations(t)
@@ -165,7 +167,7 @@ func TestGaperProgramExit(t *testing.T) {
 
 			mockWatcher := new(testdata.MockWacther)
 			watcherErrorsChan := make(chan error)
-			watcherEvetnsChan := make(chan string)
+			watcherEvetnsChan := make(chan []fsnotify.Event)
 			mockWatcher.On("Errors").Return(watcherErrorsChan)
 			mockWatcher.On("Events").Return(watcherEvetnsChan)
 
@@ -184,7 +186,7 @@ func TestGaperProgramExit(t *testing.T) {
 				time.Sleep(1 * time.Second)
 				chOSSiginal <- syscall.SIGINT
 			}()
-			err := run(cfg, chOSSiginal, mockBuilder, mockRunner, mockWatcher)
+			err := start(cfg, chOSSiginal, mockBuilder, mockRunner, mockWatcher)
 			assert.NotNil(t, err, "build error")
 			assert.Equal(t, "OS signal: interrupt", err.Error())
 			mockBuilder.AssertExpectations(t)
