@@ -1,3 +1,6 @@
+| :warning: This project has been transferred to https://github.com/maxclaus/gaper. Keeping this fork around so existing referrences still work as before.
+| ---
+
 <p align="center">
   <img width="200px" src="https://raw.githubusercontent.com/maxcnunes/gaper/master/gopher-gaper.png">
   <h3 align="center">gaper</h3>
